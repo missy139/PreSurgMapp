@@ -8,7 +8,7 @@ Set up and Start:
 2. Enter "PreSurgMapp" in MATLAB command window (no quotation marks).
 
 New Features of PreSurgMapp v2.0
-1. An input box for user to adjust the level of smoothing (FWHM) is added.
+1. An input box for user to adjust the level of smoothing (FWHM) is added;
 2. Provide three types of individual-level ICA analyses for users to choose. For task fMRI, Traditional ICA (task) can be used. For rs-fMRI, both Traditional ICA (rest) and ICA with DICI (rest) can be used. There is a difference between Traditional ICA (rest) and ICA with DICI (rest), Traditional ICA (rest) is intended for users who have a strong hypothesis on the pattern of the target component and want to set the number of components by themself (i.e., 50), while ICA with DICI (rest) will be fully-automatic as long as the user have a template at hand. It uses multiple settings of the number of components and utilizes an automatic component identification method based on discriminability-index. All the components from multiple ICA runs with multiple number of component settings are ranked and the best component. Thus, the identification of target component will be less biased, and the problem of inconsistency due to the preset number of components can be avoided. 
 3. For ICA with DICI (rest), a set of commonly used templates, e.g., sensorimotor, language, etc. are provided for convenience. 
 4. Support task activation analysis with more than one condition (two conditions).
