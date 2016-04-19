@@ -4,9 +4,11 @@ PreSurgMapp is a toolbox for pipelined processing dedicated to individualized pr
 The current release is PreSurgMapp v2.0.
 
 Set up and Start:
+
 1. Simply add the path to MATLAB just like SPM.
 
 2. Enter "PreSurgMapp" in MATLAB command window (no quotation marks).
+3. 
 
 New Features of PreSurgMapp v2.0
 
@@ -21,7 +23,9 @@ New Features of PreSurgMapp v2.0
 
 6. The processing steps can be freely skipped or combined.	
 
+
 Help and Bug Report:
+
 Please refer to http://www.restfmri.net.
 
 Copyright(c) 2014; GNU GENERAL PUBLIC LICENSE
