@@ -5,7 +5,7 @@ function [Error]=TumorProcessing_main(AutoDataProcessParameter)
 % Output:
 %   The processed data that you want.
 %___________________________________________________________________________
-% Toolbox for pipelined processing dedicated to individualized presurgical mapping of eloquent functional areas based on multimodal functional MRI (PreSurgMapp)GUI by Huiyuan Huang. 
+% Toolbox for pipelined processing dedicated to individualized presurgical mapping of eloquent functional areas based on multimodal functional MRI (PreSurgMapp)GUI by Huiyuan Huang.
 % Release=V2.0
 % Copyright(c) 2014; GNU GENERAL PUBLIC LICENSE
 % Written by Huiyuan Huang on Augest-2014
@@ -19,7 +19,7 @@ function [Error]=TumorProcessing_main(AutoDataProcessParameter)
 
 if ischar(AutoDataProcessParameter)  %If inputed a .mat file name. (Cfg inside)
     load(AutoDataProcessParameter);
-    e
+    AutoDataProcessParameter=Cfg;
 end
 
 [ProgramPath, fileN, extn] = fileparts(which('TumorProcessing_main.m'));
@@ -399,6 +399,7 @@ if ~isempty(Error)
 end
 
 
+
 %Slice Timing
 if (AutoDataProcessParameter.IsSliceTiming==1)
     for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
@@ -729,7 +730,6 @@ if ~isempty(Error)
 end
 
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Coregister T1 Image to Functional space
 if (AutoDataProcessParameter.IsNeedT1CoregisterToFun==1)
@@ -1006,6 +1006,26 @@ if (AutoDataProcessParameter.IsCovremove==1) && ((strcmpi(AutoDataProcessParamet
     end
 end
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Reorient Interactively After Coregistration for better orientation in Segmentation      Added by HHY 29150603
+%Do not need parfor
+
+if (AutoDataProcessParameter.IsNeedReorientInteractivelyAfterCoreg==1)
+    
+    if ~(7==exist([AutoDataProcessParameter.DataProcessDir,filesep,'ReorientMats'],'dir'))
+        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'ReorientMats']);
+    end
+    %Reorient
+    cd([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName]);
+    for i=1:AutoDataProcessParameter.SubjectNum
+        FileList=[];
+        
+        DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
+        if isempty(DirT1ImgCoreg)  %YAN Chao-Gan, 111114. Also support .nii files.
+            DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii.gz']);
+            if length(DirT1ImgCoreg)==1
+                gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Reorient Interactively After Coregistration for better orientation in Segmentation      Added by HHY 29150603
@@ -2975,7 +2995,7 @@ if (AutoDataProcessParameter.IsCaltaskactivation==1)
     %         homeDat =([AutoDataProcessParameter.DataProcessDir,filesep,'NiftiPairs']);
     %     else
     if ~isempty(strfind(AutoDataProcessParameter.StartingDirName,'NiftiPairs'))                    % revised by HHY 20130603
-        homeDat =([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName]);; %改：平滑后数据所在文件夹
+        homeDat =([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName]); %改：平滑后数据所在文件夹
     elseif AutoDataProcessParameter.FunctionalSessionNumber==1
         homeDat=([AutoDataProcessParameter.DataProcessDir,filesep,'NiftiPairs']);
     elseif AutoDataProcessParameter.FunctionalSessionNumber>1
@@ -3007,7 +3027,7 @@ if (AutoDataProcessParameter.IsCaltaskactivation==1)
         end
         
         matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).name = AutoDataProcessParameter.taskname; %改： 结果名字
-        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).onset = AutoDataProcessParameter.taskactivation.Onset'; %% load onset
+        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).onset = AutoDataProcessParameter.taskactivation.Onset; %% load onset
         matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).duration = AutoDataProcessParameter.taskactivation.Duration;        %改： duration
         matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).tmod = 0;
         matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).pmod = struct('name', {}, 'param', {}, 'poly', {});
