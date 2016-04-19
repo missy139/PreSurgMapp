@@ -8,7 +8,7 @@ Set up and Start:
 1. Simply add the path to MATLAB just like SPM.
 
 2. Enter "PreSurgMapp" in MATLAB command window (no quotation marks).
-3. 
+
 
 New Features of PreSurgMapp v2.0
 
