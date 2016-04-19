@@ -1,6 +1,6 @@
 function varargout = TUMOR(varargin)
 
-% Toolbox for pipelined processing dedicated to individualized presurgical mapping of eloquent functional areas based on multimodal functional MRI (PreSurgMapp) GUI by Huiyuan Huang. 
+% Toolbox for pipelined processing dedicated to individualized presurgical mapping of eloquent functional areas based on multimodal functional MRI (PreSurgMapp) GUI by Huiyuan Huang.
 % Release=V2.0
 % Copyright(c) 2014; GNU GENERAL PUBLIC LICENSE
 % Written by Huiyuan Huang on Augest-2014
@@ -10,7 +10,7 @@ function varargout = TUMOR(varargin)
 % Citing Information:
 % The processing was carried out by using PreSurgMapp,which is based on SPM8, REST, DPARSFA and MICA.
 
-% Last Modified by Huiyuan Huang on 25-Jan-2016
+% Last Modified by Huiyuan Huang on 15-April-2016
 
 
 % Begin initialization code - DO NOT EDIT
@@ -50,7 +50,7 @@ fprintf('Copyright(c) 2014; GNU GENERAL PUBLIC LICENSE\n');
 fprintf('Zhejiang Key Laboratory for Research in Assessment of Cognitive Impairments,Center for Cognition and Brain Disorder, Hangzhou Normal University, China\n');
 fprintf('Mail to Author:  <a href="missy139@163.com">Huang Hui-Yuan\n');
 fprintf('-----------------------------------------------------------\n');
-fprintf('Citing Information:\nThe processing was carried out by using TUMOR,which is based on SPM8, REST, DPARSFA and MICA.\n');
+fprintf('Citing Information:\nThe processing was carried out by using PreSurgMapp,which is based on SPM8, REST, DPARSFA and MICA.\n');
 
 handles.hContextMenu =uicontextmenu;
 set(handles.listSubjectID, 'UIContextMenu', handles.hContextMenu);	% Added popup menu to delete selected subject by right click.
@@ -75,7 +75,7 @@ set(handles.popupmenuTemplateParameters,'String',TemplateParameters);
 if (~ispc) && (~ismac)
     TipString = sprintf([  'Parameter Templates\n'...
         'ZJPPH\n'...
-        'CCBD\n'...   
+        'CCBD\n'...
         'Calculate FC only\n'...
         'Calculate Traditional ICA (rest) only\n'...
         'Calculate Traditional ICA (task) only\n'...
@@ -215,15 +215,16 @@ handles.Cfg.IsCalICA=0; %HHY20150505
 handles.Cfg.IsCalrestICA=0;    % Revised byHHY20150607
 handles.Cfg.restICA.TNC=[];
 handles.Cfg.IsCaltaskICA=0;
-handles.Cfg.tasklICA.TNC=[];
+handles.Cfg.taskICA.TNC=[];
 handles.Cfg.IsCalDICIICA=0;
 
 handles.Cfg.IsCaltaskactivation=0; %HHY20150505
-handles.Cfg.taskactivation.Onset=[];
-handles.Cfg.taskactivation.Duration=[];
 handles.Cfg.taskname=[];
-
-
+handles.Cfg.taskactivation.Onset1=[]; %HHY20160415
+handles.Cfg.taskactivation.Duration1=[];
+handles.Cfg.taskactivation.Onset2=[];
+handles.Cfg.taskactivation.Duration2=[];
+handles.Cfg.taskcondition=1;
 
 
 if ~(exist('rest.m')&&exist('spm.m'))
@@ -473,15 +474,15 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function editTimePoints_Callback(hObject, eventdata, handles)
 handles.Cfg.TimePoints =str2double(get(hObject,'String'));
 if handles.Cfg.TimePoints==0
-    uiwait(msgbox({'If the Number of Time Points is set to 0, then DPARSFA will not check the number of time points. Please make sure the number of time points by yourself!';...
+    uiwait(msgbox({'If the Number of Time Points is set to 0, then PreSurgMapp will not check the number of time points. Please make sure the number of time points by yourself!';...
         },'Set Number of Time Points'));
 end
 guidata(hObject, handles);
 UpdateDisplay(handles);
+
 
 % --- Executes during object creation, after setting all properties.
 function editTimePoints_CreateFcn(hObject, eventdata, handles)
@@ -496,11 +497,10 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function editTR_Callback(hObject, eventdata, handles)
 handles.Cfg.TR =str2double(get(hObject,'String'));
 if handles.Cfg.TR==0
-    uiwait(msgbox({'If TR is set to 0, then TUMOR will retrieve the TR information from the NIfTI images. Please ensure the TR information in NIfTI images are correct!';...
+    uiwait(msgbox({'If TR is set to 0, then PreSurgMapp will retrieve the TR information from the NIfTI images. Please ensure the TR information in NIfTI images are correct!';...
         },'Set TR'));
 end
 %handles.Cfg.SliceTiming.TR=handles.Cfg.TR;
@@ -510,6 +510,7 @@ end
 %handles.Cfg.CalfALFF.ASamplePeriod=handles.Cfg.TR;
 guidata(hObject, handles);
 UpdateDisplay(handles);
+
 
 % --- Executes during object creation, after setting all properties.
 function editTR_CreateFcn(hObject, eventdata, handles)
@@ -743,6 +744,92 @@ function pushbuttonViewComponents_Callback(hObject, eventdata, handles)
 TUMOR_view_ICA_gui
 
 
+% --- Executes during object creation, after setting all properties.
+function checkbox_ICAtotal_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_ICAtotal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function checkbox_restICA_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_restICA (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function checkbox_DICIICA_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_DICIICA (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+% --- Executes during object creation, after setting all properties.
+
+function text_TCN_CreateFcn(hObject, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function edit_rest_TNC_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_rest_TNC (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+% --- Executes during object creation, after setting all properties.
+function edit_task_TNC_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_task_TNC (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function editFWHM_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editFWHM (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+
+function editFWHM_Callback(hObject, eventdata, handles)
+FWHM=get(hObject,'String');
+handles.Cfg.Smooth.FWHM =eval(['[',FWHM,']']);
+guidata(hObject, handles);
+UpdateDisplay(handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function textFWHM_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to textFWHM (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function checkbox_taskactivation_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_taskactivation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
 
 
 % --- Executes on button press in checkbox_taskactivation.
@@ -774,22 +861,107 @@ end
 
 
 
-function edit_Onset_Callback(hObject, eventdata, handles)
-Onset=get(hObject,'String');
-handles.Cfg.taskactivation.Onset=eval(['[',Onset,']']);
+% --- Executes during object creation, after setting all properties.
+function edit_Onset1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Onset1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function edit_Duration1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Duration1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+% --- Executes during object creation, after setting all properties.
+function text_taskname_CreateFcn(hObject, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function text_Onset1_CreateFcn(hObject, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function text_Duration1_CreateFcn(hObject, eventdata, handles)
+
+
+% --- Executes on button press in radiobutton_task_condition1.
+function radiobutton_task_condition1_Callback(hObject, eventdata, handles)
+if get(hObject,'Value')
+handles.Cfg.taskcondition=1;
+set(handles.radiobutton_task_condition1,'Value',1);
+set(handles.radiobutton_task_condition2,'Value',0);
+drawnow;
+guidata(hObject, handles);
+UpdateDisplay(handles);
+end
+
+function edit_Onset1_Callback(hObject, eventdata, handles)
+Onset1=get(hObject,'String');
+handles.Cfg.taskactivation.Onset1=eval(['[',Onset1,']']);
 guidata(hObject, handles);
 UpdateDisplay(handles);
 
 
-
-function edit_Duration_Callback(hObject, eventdata, handles)
+function edit_Duration1_Callback(hObject, eventdata, handles)
 % handles.Cfg.taskactivation.Duration =str2double(get(hObject,'String'));
 % guidata(hObject, handles);
 % UpdateDisplay(handles);
-Duration=get(hObject,'String');
-handles.Cfg.taskactivation.Duration =eval(['[',Duration,']']);
+Duration1=get(hObject,'String');
+handles.Cfg.taskactivation.Duration1 =eval(['[',Duration1,']']);
 guidata(hObject, handles);
 UpdateDisplay(handles);
+
+% --- Executes on button press in radiobutton_task_condition2.
+function radiobutton_task_condition2_Callback(hObject, eventdata, handles)
+if get(hObject,'Value')
+handles.Cfg.taskcondition=2;
+set(handles.radiobutton_task_condition1,'Value',0);
+set(handles.radiobutton_task_condition2,'Value',1);
+drawnow;
+guidata(hObject, handles);
+UpdateDisplay(handles);
+end
+
+% --- Executes during object creation, after setting all properties.
+function text_Onset2_CreateFcn(hObject, eventdata, handles)
+
+function edit_Onset2_Callback(hObject, eventdata, handles)
+Onset2=get(hObject,'String');
+handles.Cfg.taskactivation.Onset2=eval(['[',Onset2,']']);
+guidata(hObject, handles);
+UpdateDisplay(handles);
+
+function edit_Duration2_Callback(hObject, eventdata, handles)
+Duration2=get(hObject,'String');
+handles.Cfg.taskactivation.Duration2 =eval(['[',Duration2,']']);
+guidata(hObject, handles);
+UpdateDisplay(handles);
+
+% --- Executes during object creation, after setting all properties.
+function edit_Duration2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Duration2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 
 
 
@@ -825,7 +997,6 @@ function editStartingDirName_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 
@@ -881,6 +1052,7 @@ else
         handles.Cfg.TumorProVersion = handles.Release;
     end
 end
+
 
 
 if ~isfield(handles.Cfg.Covremove.HeadMotionScrubbingRegressors,'FDType')
@@ -1082,6 +1254,14 @@ else
     set(handles.textReferenceSlice,'Enable', 'off');
 end
 
+% add FWHM on 2016.0217
+if handles.Cfg.IsSmooth==1
+    set(handles.editFWHM, 'Enable', 'on', 'String', mat2str(handles.Cfg.Smooth.FWHM), 'ForegroundColor', 'k');
+    set(handles.textFWHM,'Enable', 'on', 'ForegroundColor', 'k');
+else
+    set(handles.editFWHM, 'Enable', 'off', 'String', mat2str(handles.Cfg.Smooth.FWHM));
+    set(handles.textFWHM,'Enable', 'off');
+end
 
 
 if  handles.Cfg.IsCalFCtotal==1
@@ -1126,7 +1306,6 @@ end
 
 
 if  handles.Cfg.IsCalICA==1
-    
     set(handles.checkbox_ICAtotal, 'Value', 1);
     set(handles.checkbox_restICA, 'Enable', 'on', 'Value', handles.Cfg.IsCalrestICA, 'ForegroundColor', 'k');
     set(handles.checkbox_taskICA, 'Enable', 'on', 'Value', handles.Cfg.IsCaltaskICA, 'ForegroundColor', 'k');
@@ -1139,7 +1318,7 @@ if  handles.Cfg.IsCalICA==1
 else
     set(handles.checkbox_ICAtotal, 'Value', 0);
     set(handles.checkbox_restICA, 'Enable', 'off', 'Value', 0, 'ForegroundColor', [0.4,0.4,0.4]);
-      set(handles.checkbox_taskICA, 'Enable', 'off', 'Value', 0, 'ForegroundColor', [0.4,0.4,0.4]);
+    set(handles.checkbox_taskICA, 'Enable', 'off', 'Value', 0, 'ForegroundColor', [0.4,0.4,0.4]);
     set(handles.checkbox_DICIICA, 'Enable', 'off',  'Value', 0, 'ForegroundColor', [0.4,0.4,0.4]);
     set(handles.edit_rest_TNC, 'Enable', 'off', 'String', num2str(handles.Cfg.restICA.TNC));
     set(handles.edit_task_TNC, 'Enable', 'off', 'String', num2str(handles.Cfg.taskICA.TNC));
@@ -1152,7 +1331,6 @@ end
 
 
 if handles.Cfg.IsCalICA==1&&handles.Cfg.IsCalrestICA==1
-    
     set(handles.checkbox_restICA, 'Value', 1, 'ForegroundColor', 'b');
     set(handles.edit_rest_TNC, 'Enable', 'on', 'String', num2str(handles.Cfg.restICA.TNC));
     set(handles.text_rest_TNC,'Enable', 'on');
@@ -1164,7 +1342,6 @@ end
 
 
 if handles.Cfg.IsCalICA==1&&handles.Cfg.IsCaltaskICA==1
-    
     set(handles.checkbox_taskICA, 'Value', 1, 'ForegroundColor', 'b');
     set(handles.edit_task_TNC, 'Enable', 'on', 'String', num2str(handles.Cfg.taskICA.TNC));
     set(handles.text_task_TNC,'Enable', 'on');
@@ -1176,7 +1353,6 @@ end
 
 
 if  handles.Cfg.IsCalICA==1&&handles.Cfg.IsCalDICIICA==1
-    
     set(handles.checkbox_DICIICA, 'Value', 1, 'ForegroundColor', 'b');
 elseif  handles.Cfg.IsCalDICIICA==0
     set(handles.checkbox_DICIICA, 'Value', 0, 'ForegroundColor', [0.4,0.4,0.4]);
@@ -1187,19 +1363,46 @@ end
 if handles.Cfg.IsCaltaskactivation==1
     set(handles.checkbox_taskactivation, 'Value', 1);
     set(handles.edit_taskname, 'Enable', 'on', 'String', handles.Cfg.taskname);
-    set(handles.edit_Onset, 'Enable', 'on', 'String', mat2str(handles.Cfg.taskactivation.Onset));
-    set(handles.edit_Duration, 'Enable', 'on', 'String', num2str(handles.Cfg.taskactivation.Duration));
-    set(handles.text_Name,'Enable', 'on');
-    set(handles.text_Onset,'Enable', 'on');
-    set(handles.text_Duration,'Enable', 'on');
+    set(handles.text_taskname,'Enable', 'on');
+    set(handles.radiobutton_task_condition1, 'Enable', 'on');
+    set(handles.radiobutton_task_condition2, 'Enable', 'on');
+    % add taskconditon on 2016.0415
+    if handles.Cfg.taskcondition==1
+        set(handles.edit_Onset1, 'Enable', 'on', 'String', mat2str(handles.Cfg.taskactivation.Onset1));
+        set(handles.edit_Duration1, 'Enable', 'on', 'String', num2str(handles.Cfg.taskactivation.Duration1));
+        set(handles.text_Onset1,'Enable', 'on');
+        set(handles.text_Duration1,'Enable', 'on');
+        set(handles.edit_Onset2, 'Enable', 'off', 'String', mat2str(handles.Cfg.taskactivation.Onset2));
+        set(handles.edit_Duration2, 'Enable', 'off', 'String', num2str(handles.Cfg.taskactivation.Duration2));
+        set(handles.text_Onset2,'Enable', 'off');
+        set(handles.text_Duration2,'Enable', 'off');
+        
+    elseif handles.Cfg.taskcondition==2
+        set(handles.edit_Onset1, 'Enable', 'on', 'String', mat2str(handles.Cfg.taskactivation.Onset1));
+        set(handles.edit_Duration1, 'Enable', 'on', 'String', num2str(handles.Cfg.taskactivation.Duration1));
+        set(handles.text_Onset1,'Enable', 'on');
+        set(handles.text_Duration1,'Enable', 'on');
+        set(handles.edit_Onset2, 'Enable', 'on', 'String', mat2str(handles.Cfg.taskactivation.Onset2));
+        set(handles.edit_Duration2, 'Enable', 'on', 'String', num2str(handles.Cfg.taskactivation.Duration2));
+        set(handles.text_Onset2,'Enable', 'on');
+        set(handles.text_Duration2,'Enable', 'on');
+        
+    end
 else
     set(handles.checkbox_taskactivation, 'Value', 0);
     set(handles.edit_taskname, 'Enable', 'off', 'String',handles.Cfg.taskname);
-    set(handles.edit_Onset, 'Enable', 'off', 'String', mat2str(handles.Cfg.taskactivation.Onset));
-    set(handles.edit_Duration, 'Enable', 'off', 'String', num2str(handles.Cfg.taskactivation.Duration));
-    set(handles.text_Name,'Enable', 'off');
-    set(handles.text_Onset,'Enable', 'off');
-    set(handles.text_Duration,'Enable', 'off');
+    set(handles.text_taskname,'Enable', 'off');
+    set(handles.radiobutton_task_condition1, 'Enable', 'off');
+    set(handles.radiobutton_task_condition2, 'Enable', 'off');
+    set(handles.edit_Onset1, 'Enable', 'off', 'String', mat2str(handles.Cfg.taskactivation.Onset1));
+    set(handles.edit_Duration1, 'Enable', 'off', 'String', num2str(handles.Cfg.taskactivation.Duration1));
+    set(handles.text_Onset1,'Enable', 'off');
+    set(handles.text_Duration1,'Enable', 'off');
+    set(handles.edit_Onset2, 'Enable', 'off', 'String', mat2str(handles.Cfg.taskactivation.Onset2));
+    set(handles.edit_Duration2, 'Enable', 'off', 'String', num2str(handles.Cfg.taskactivation.Duration2));
+    set(handles.text_Onset2,'Enable', 'off');
+    set(handles.text_Duration2,'Enable', 'off');
+    
 end
 
 
@@ -1211,36 +1414,8 @@ drawnow;
 
 
 % --- Executes during object creation, after setting all properties.
-function checkbox_ICAtotal_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to checkbox_ICAtotal (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-
-% --- Executes during object creation, after setting all properties.
-function checkbox_restICA_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to checkbox_restICA (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-
-% --- Executes during object creation, after setting all properties.
-function checkbox_DICIICA_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to checkbox_DICIICA (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-
-% --- Executes during object creation, after setting all properties.
-function checkbox_taskactivation_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to checkbox_taskactivation (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-
-% --- Executes during object creation, after setting all properties.
-function edit_Onset_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_Onset (see GCBO)
+function edit_Onset2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Onset2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1251,77 +1426,11 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes during object creation, after setting all properties.
-function edit_Duration_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_Duration (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function text_TCN_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to text_TCN (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-
-% --- Executes during object creation, after setting all properties.
-function text_Name_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to text_Name (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-
-% --- Executes during object creation, after setting all properties.
-function text_Onset_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to text_Onset (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-
-% --- Executes during object creation, after setting all properties.
-function text_Duration_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to text_Duration (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-
-% --- Executes during object creation, after setting all properties.
-function edit_rest_TNC_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_rest_TNC (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function text_blockdesign_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to text_blockdesign (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-
-
-
-% --- Executes during object creation, after setting all properties.
-function edit_task_TNC_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_task_TNC (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+% --- Executes on key press with focus on editTimePoints and none of its controls.
+function editTimePoints_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to editTimePoints (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
