@@ -1,4 +1,4 @@
-function varargout = TUMOR(varargin)
+function varargout = PreSurgMapp(varargin)
 
 % Toolbox for pipelined processing dedicated to individualized presurgical mapping of eloquent functional areas based on multimodal functional MRI (PreSurgMapp) GUI by Huiyuan Huang.
 % Release=V2.0
@@ -17,8 +17,8 @@ function varargout = TUMOR(varargin)
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
     'gui_Singleton',  gui_Singleton, ...
-    'gui_OpeningFcn', @TUMOR_OpeningFcn, ...
-    'gui_OutputFcn',  @TUMOR_OutputFcn, ...
+    'gui_OpeningFcn', @PreSurgMapp_OpeningFcn, ...
+    'gui_OutputFcn',  @PreSurgMapp_OutputFcn, ...
     'gui_LayoutFcn',  [], ...
     'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -34,8 +34,8 @@ end
 
 
 % --- Executes just before DPARSFA is made visible.
-function TUMOR_OpeningFcn(hObject, eventdata, handles, varargin)
-Release='V2.0';
+function PreSurgMapp_OpeningFcn(hObject, eventdata, handles, varargin)
+Release='V2.1';
 handles.Release = Release; % Will be used in mat file version checking (e.g., in function SetLoadedData)
 
 if ispc
@@ -51,13 +51,16 @@ fprintf('Zhejiang Key Laboratory for Research in Assessment of Cognitive Impairm
 fprintf('Mail to Author:  <a href="missy139@163.com">Huang Hui-Yuan\n');
 fprintf('-----------------------------------------------------------\n');
 fprintf('Citing Information:\nThe processing was carried out by using PreSurgMapp,which is based on SPM8, REST, DPARSFA and MICA.\n');
+ fprintf('-----------------------------------------------------------\n');
+ fprintf('If you think PreSurgMapp is useful for your work, citing it in your paper would be greatly appreciated.\nSomething like "... The processing was carried out by using PreSurgMapp (Huang H, Ding Z, Mao D, Yuan J, Zhu F, Chen S, Xu Y, Lou L, Feng X, Qi L (2016) PreSurgMapp: a MATLAB Toolbox for Presurgical Mapping of Eloquent Functional Areas Based on Task-Related and Resting-State Functional MRI. Neuroinformatics 1-18).\n');
+    
 
 handles.hContextMenu =uicontextmenu;
 set(handles.listSubjectID, 'UIContextMenu', handles.hContextMenu);	% Added popup menu to delete selected subject by right click.
-uimenu(handles.hContextMenu, 'Label', 'Remove the selected participant', 'Callback', 'TUMOR(''DeleteSelectedSubjectID'',gcbo,[], guidata(gcbo))');
-uimenu(handles.hContextMenu, 'Label', 'Remove all the participants', 'Callback', 'TUMOR(''DeleteAllSubjects'',gcbo,[], guidata(gcbo))');
-uimenu(handles.hContextMenu, 'Label', 'Load participant ID from a text file', 'Callback', 'TUMOR(''LoadSubIDFromTextFile'',gcbo,[], guidata(gcbo))');
-uimenu(handles.hContextMenu, 'Label', 'Save participant ID to a text file', 'Callback', 'TUMOR(''SaveSubIDToTextFile'',gcbo,[], guidata(gcbo))');
+uimenu(handles.hContextMenu, 'Label', 'Remove the selected participant', 'Callback', 'PreSurgMapp(''DeleteSelectedSubjectID'',gcbo,[], guidata(gcbo))');
+uimenu(handles.hContextMenu, 'Label', 'Remove all the participants', 'Callback', 'PreSurgMapp(''DeleteAllSubjects'',gcbo,[], guidata(gcbo))');
+uimenu(handles.hContextMenu, 'Label', 'Load participant ID from a text file', 'Callback', 'PreSurgMapp(''LoadSubIDFromTextFile'',gcbo,[], guidata(gcbo))');
+uimenu(handles.hContextMenu, 'Label', 'Save participant ID to a text file', 'Callback', 'PreSurgMapp(''SaveSubIDToTextFile'',gcbo,[], guidata(gcbo))');
 
 
 TemplateParameters={ 'Parameter Templates'...
@@ -85,14 +88,14 @@ if (~ispc) && (~ismac)
     set(handles.popupmenuTemplateParameters,'ToolTipString',TipString);
 end
 
-handles.Cfg.TumorProVersion=Release;
+handles.Cfg.PreSurgMappProVersion=Release;
 handles.Cfg.WorkingDir=pwd;
 handles.Cfg.DataProcessDir=handles.Cfg.WorkingDir;
 handles.Cfg.SubjectID={};
 handles.Cfg.TimePoints=240;
 handles.Cfg.TR=2;
 handles.Cfg.IsNeedConvertFunDCM2IMG=1;
-handles.Cfg.IsApplyDownloadedReorientMats=0; %YAN Chao-Gan, 130612.
+handles.Cfg.IsApplyDownloadedReorientMats=0; 
 %handles.Cfg.IsNeedConvert4DFunInto3DImg=0;
 handles.Cfg.IsRemoveFirstTimePoints=1;
 handles.Cfg.RemoveFirstTimePoints=4;
@@ -176,7 +179,7 @@ handles.Cfg.Scrubbing.ScrubbingMethod='cut';
 
 handles.Cfg.IsCalReHo=0;
 handles.Cfg.CalReHo.ClusterNVoxel=27;
-handles.Cfg.CalReHo.SmoothReHo=0; %YAN Chao-Gan, 121225.
+handles.Cfg.CalReHo.SmoothReHo=0; 
 %handles.Cfg.CalReHo.AMaskFilename='Default';
 %handles.Cfg.CalReHo.smReHo=1;
 %handles.Cfg.CalReHo.mReHo_1=1;
@@ -200,7 +203,7 @@ handles.Cfg.CWAS.Regressors = [];
 handles.Cfg.CWAS.iter = 0;
 
 
-handles.Cfg.IsNormalizeToSymmetricGroupT1Mean = 0; %YAN Chao-Gan, 121225.
+handles.Cfg.IsNormalizeToSymmetricGroupT1Mean = 0; 
 handles.Cfg.IsCalVMHC = 0;
 
 
@@ -212,7 +215,7 @@ handles.NiftiPairsDataDir={};
 handles.NiftiPairsOutputDir={};
 
 handles.Cfg.IsCalICA=0; %HHY20150505
-handles.Cfg.IsCalrestICA=0;    % Revised byHHY20150607
+handles.Cfg.IsCalrestICA=0;    % Revised by HHY20150607
 handles.Cfg.restICA.TNC=[];
 handles.Cfg.IsCaltaskICA=0;
 handles.Cfg.taskICA.TNC=[];
@@ -228,14 +231,14 @@ handles.Cfg.taskcondition=1;
 
 
 if ~(exist('rest.m')&&exist('spm.m'))
-    uiwait(msgbox('TUMOR is based on SPM and REST, Please install Matlab 7.3, SPM5, REST V1.8 or later version at first.','TUMOR')); %Huang Huiyuan 20140815
+    uiwait(msgbox('PreSurgMapp is based on SPM, REST, DPARSFA and MICA, Please install Matlab 7.3, SPM5, REST V1.8, DPARSFA V2.3, MICA beta1.22 or later version at first.','PreSurgMapp')); %Huang Huiyuan 20160914
 else
     [SPMversion,c]=spm('Ver');
     SPMversion=str2double(SPMversion(end));
     RESTversion=str2double(rest_misc('GETRESTVERSION'));
     FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
     if (SPMversion<5)||(RESTversion<1.8)||(FullMatlabVersion(1)*1000+FullMatlabVersion(2)<7*1000+3)
-        uiwait(msgbox('TUMOR is based on SPM and REST, Please install Matlab 7.3, SPM5, REST V1.8 or later version at first.','TUMOR'));
+        uiwait(msgbox('PreSurgMapp is based on SPM, REST, DPARSFA and MICA, Please install Matlab 7.3, SPM5, REST V1.8, DPARSFA V2.3, MICA beta1.22 or later version at first.','PreSurgMapp'));
     end
 end
 
@@ -254,18 +257,18 @@ if ~ispc
     end
 end
 
-% Choose default command line output for TUMOR
+% Choose default command line output for PreSurgMapp
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes TUMOR wait for user response (see UIRESUME)
+% UIWAIT makes PreSurgMapp wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = TUMOR_OutputFcn(hObject, eventdata, handles)
+function varargout = PreSurgMapp_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
@@ -274,7 +277,7 @@ varargout{1} = handles.output;
 
 % --- Executes on selection change in popupmenuTemplateParameters.
 function popupmenuTemplateParameters_Callback(hObject, eventdata, handles)
-[ProgramPath, fileN, extn] = fileparts(which('TUMOR.m'));
+[ProgramPath, fileN, extn] = fileparts(which('PreSurgMapp.m'));
 switch get(hObject, 'Value'),
     case 1,	% PT
         load([ProgramPath,filesep,'Jobmats',filesep,'Template_Blank.mat']);
@@ -530,7 +533,7 @@ function editSliceNumber_Callback(hObject, eventdata, handles)
 handles.Cfg.SliceTiming.SliceNumber =str2double(get(hObject,'String'));
 
 if handles.Cfg.SliceTiming.SliceNumber==0
-    if exist([handles.Cfg.DataProcessDir,filesep,'SliceOrderInfo.tsv'])==2 % YAN Chao-Gan, 130524. Read the slice timing information from a tsv file (Tab-separated values)
+    if exist([handles.Cfg.DataProcessDir,filesep,'SliceOrderInfo.tsv'])==2 
     else
         uiwait(msgbox({'SliceOrderInfo.tsv (under working directory) is not detected. Please go {DPARSF}/Docs/SliceOrderInfo.tsv_Instruction.txt for instructions to allow different slice timing correction for different participants. If SliceNumber is set to 0 while SliceOrderInfo.tsv is not set, the slice order is then assumed as interleaved scanning: [1:2:SliceNumber,2:2:SliceNumber]. The reference slice is set to the slice acquired at the middle time point, i.e., SliceOrder(ceil(SliceNumber/2)). SHOULD BE EXTREMELY CAUTIOUS!!!';...
             },'Set Number of Slices'));
@@ -660,7 +663,7 @@ UpdateDisplay(handles);
 
 % --- Executes on button press in pushbutton_DICOMSorter.
 function pushbutton_DICOMSorter_Callback(hObject, eventdata, handles)
-TUMOR_DicomSorter_gui
+PreSurgMapp_DicomSorter_gui
 
 
 
@@ -741,7 +744,7 @@ UpdateDisplay(handles);
 
 % --- Executes on button press in pushbuttonViewComponents.
 function pushbuttonViewComponents_Callback(hObject, eventdata, handles)
-TUMOR_view_ICA_gui
+PreSurgMapp_view_ICA_gui
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1041,15 +1044,15 @@ SetLoadedData(hObject,handles, Cfg);
 function SetLoadedData(hObject,handles, Cfg);
 handles.Cfg=Cfg;
 
-if ~isfield(handles.Cfg,'TumorProVersion')
-    uiwait(msgbox({'The current version doesn''t support the mat files saved in version earlier than TUMOR V1.0.';...
+if ~isfield(handles.Cfg,'PreSurgMappProVersion')
+    uiwait(msgbox({'The current version doesn''t support the mat files saved in version earlier than PreSurgMapp V2.0.';...
         },'Version Compatibility'));
 else
-    % YAN Chao-Gan, 130224. Update the DPARSF Version information.
-    if str2num(handles.Cfg.TumorProVersion(end-3:end)) ~= str2num(handles.Release(end-3:end))
-        uiwait(msgbox({['The mat file is created with TUMOR ',handles.Cfg.TumorProVersion,', and now is succesfully updated to TUMOR ',handles.Release,'.'];...
+  
+    if str2num(handles.Cfg.PreSurgMappProVersion(end-3:end)) ~= str2num(handles.Release(end-3:end))
+        uiwait(msgbox({['The mat file is created with PreSurgMapp ',handles.Cfg.PreSurgMappProVersion,', and now is succesfully updated to PreSurgMapp ',handles.Release,'.'];...
             },'Version Compatibility'));
-        handles.Cfg.TumorProVersion = handles.Release;
+        handles.Cfg.PreSurgMappProVersion = handles.Release;
     end
 end
 
@@ -1091,10 +1094,10 @@ end
 RawBackgroundColor=get(handles.pushbuttonRun ,'BackgroundColor');
 RawForegroundColor=get(handles.pushbuttonRun ,'ForegroundColor');
 set(handles.pushbuttonRun ,'Enable', 'off','BackgroundColor', 'red','ForegroundColor','green');
-Cfg=handles.Cfg; %Added by YAN Chao-Gan, 100130. Save the configuration parameters automatically.
-Datetime=fix(clock); %Added by YAN Chao-Gan, 100130.
-save([handles.Cfg.DataProcessDir,filesep,'TumorProcessing_AutoSave_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.mat'], 'Cfg'); %Added by YAN Chao-Gan, 100130.
-[Error]=TumorProcessing_main(handles.Cfg);
+Cfg=handles.Cfg; 
+Datetime=fix(clock); 
+save([handles.Cfg.DataProcessDir,filesep,'PreSurgMappProcessing_AutoSave_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.mat'], 'Cfg'); %Added by YAN Chao-Gan, 100130.
+[Error]=PreSurgMappProcessing_main(handles.Cfg);
 if ~isempty(Error)
     uiwait(msgbox(Error,'Errors were encountered while processing','error'));
 end
@@ -1120,7 +1123,7 @@ if (handles.Cfg.IsNeedConvertFunDCM2IMG==1)
     if 7==exist([handles.Cfg.WorkingDir,filesep,'FunRaw'],'dir')
         if isempty (handles.Cfg.SubjectID)
             Dir=dir([handles.Cfg.WorkingDir,filesep,'FunRaw']);
-            if strcmpi(Dir(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
+            if strcmpi(Dir(3).name,'.DS_Store')  
                 StartIndex=4;
             else
                 StartIndex=3;
@@ -1137,7 +1140,7 @@ else
     if 7==exist([handles.Cfg.WorkingDir,filesep,handles.Cfg.StartingDirName],'dir')
         if isempty (handles.Cfg.SubjectID)
             Dir=dir([handles.Cfg.WorkingDir,filesep,handles.Cfg.StartingDirName]);
-            if strcmpi(Dir(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
+            if strcmpi(Dir(3).name,'.DS_Store')  
                 StartIndex=4;
             else
                 StartIndex=3;
@@ -1150,7 +1153,7 @@ else
         if (handles.Cfg.TimePoints)>0 % If the number of time points is not set at 0, then check the number of time points.
             if ~(strcmpi(handles.Cfg.StartingDirName,'T1Raw') || strcmpi(handles.Cfg.StartingDirName,'T1Img') || strcmpi(handles.Cfg.StartingDirName,'T1NiiGZ') ) %If not just use for VBM, check if the time points right. %YAN Chao-Gan, 111130. Also add T1 .nii.gz support.
                 DirImg=dir([handles.Cfg.WorkingDir,filesep,handles.Cfg.StartingDirName,filesep,handles.Cfg.SubjectID{1},filesep,'*.img']);
-                if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files.
+                if isempty(DirImg) 
                     DirImg=dir([handles.Cfg.WorkingDir,filesep,handles.Cfg.StartingDirName,filesep,handles.Cfg.SubjectID{1},filesep,'*.nii']);
                     if length(DirImg)>1
                         NTimePoints = length(DirImg);
@@ -1173,7 +1176,7 @@ else
                     NTimePoints = length(DirImg);
                 end
                 
-                if NTimePoints~=(handles.Cfg.TimePoints) %YAN Chao-Gan 090922, %if length(DirImg)~=(handles.Cfg.TimePoints-handles.Cfg.RemoveFirstTimePoints)
+                if NTimePoints~=(handles.Cfg.TimePoints) 
                     uiwait(msgbox(['The detected time points of subject "',handles.Cfg.SubjectID{1},'" is: ',num2str(NTimePoints),', it is different from the predefined time points: ',num2str(handles.Cfg.TimePoints),'. Please check your data!'],'Configuration parameters checking','warn')); %YAN Chao-Gan 090922, %uiwait(msgbox(['The detected time points of subject "',handles.Cfg.SubjectID{1},'" is: ',num2str(length(DirImg)),', it is different from the predefined time points: ',num2str(handles.Cfg.TimePoints-handles.Cfg.RemoveFirstTimePoints),'. Please check your data!'],'Configuration parameters checking','warn'));
                     return
                 end
@@ -1202,7 +1205,7 @@ if handles.Cfg.TR==0
 end
 
 if (handles.Cfg.IsSliceTiming==1) && (handles.Cfg.SliceTiming.SliceNumber==0)
-    if ~exist([handles.Cfg.DataProcessDir,filesep,'SliceOrderInfo.tsv'])==2 % YAN Chao-Gan, 130524. Read the slice timing information from a tsv file (Tab-separated values)
+    if ~exist([handles.Cfg.DataProcessDir,filesep,'SliceOrderInfo.tsv'])==2 
         Answer=questdlg('SliceOrderInfo.tsv (under working directory) is not detected. Please go {DPARSF}/Docs/SliceOrderInfo.tsv_Instruction.txt for instructions to allow different slice timing correction for different participants. If SliceNumber is set to 0 while SliceOrderInfo.tsv is not set, the slice order is then assumed as interleaved scanning: [1:2:SliceNumber,2:2:SliceNumber]. The reference slice is set to the slice acquired at the middle time point, i.e., SliceOrder(ceil(SliceNumber/2)). SHOULD BE EXTREMELY CAUTIOUS!!! Are you sure want to continue?','Configuration parameters checking','Yes','No','No');
         if ~strcmpi(Answer,'Yes')
             return
@@ -1429,6 +1432,921 @@ end
 % --- Executes on key press with focus on editTimePoints and none of its controls.
 function editTimePoints_KeyPressFcn(hObject, eventdata, handles)
 % hObject    handle to editTimePoints (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object creation, after setting all properties.
+function text2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to text2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function text3_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to text3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function text4_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to text4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function uipanel2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to uipanel2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function text13_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to text13 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function pushbutton_DICOMSorter_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pushbutton_DICOMSorter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function btnSelectWorkingDir_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to btnSelectWorkingDir (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function text12_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to text12 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function textSliceNumber_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to textSliceNumber (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function textSliceOrder_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to textSliceOrder (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function textReferenceSlice_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to textReferenceSlice (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function checkbox_FCtotal_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_FCtotal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function checkboxCovremoveAfterNormalizeFiltering_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to checkboxCovremoveAfterNormalizeFiltering (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function checkboxCalFC_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to checkboxCalFC (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function checkbox_taskICA_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_taskICA (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function pushbuttonViewComponents_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonViewComponents (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function radiobutton_task_condition1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to radiobutton_task_condition1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function radiobutton_task_condition2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to radiobutton_task_condition2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function text_Duration2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to text_Duration2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function text14_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to text14 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function text15_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to text15 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function pushbuttonSave_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonSave (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function pushbuttonLoad_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonLoad (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function pushbuttonRun_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonRun (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object deletion, before destroying properties.
+function edit_rest_TNC_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to edit_rest_TNC (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function text_rest_TNC_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to text_rest_TNC (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over pushbuttonLoad.
+function pushbuttonLoad_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonLoad (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over pushbutton_DICOMSorter.
+function pushbutton_DICOMSorter_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to pushbutton_DICOMSorter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function pushbutton_DICOMSorter_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to pushbutton_DICOMSorter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on pushbutton_DICOMSorter and none of its controls.
+function pushbutton_DICOMSorter_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to pushbutton_DICOMSorter (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function popupmenuTemplateParameters_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenuTemplateParameters (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over popupmenuTemplateParameters.
+function popupmenuTemplateParameters_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenuTemplateParameters (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on popupmenuTemplateParameters and none of its controls.
+function popupmenuTemplateParameters_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenuTemplateParameters (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function edtWorkingDir_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to edtWorkingDir (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over edtWorkingDir.
+function edtWorkingDir_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to edtWorkingDir (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on edtWorkingDir and none of its controls.
+function edtWorkingDir_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to edtWorkingDir (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function editTimePoints_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to editTimePoints (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over editTimePoints.
+function editTimePoints_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to editTimePoints (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function editTR_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to editTR (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over editTR.
+function editTR_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to editTR (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on editTR and none of its controls.
+function editTR_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to editTR (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function editReferenceSlice_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to editReferenceSlice (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over editReferenceSlice.
+function editReferenceSlice_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to editReferenceSlice (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on editReferenceSlice and none of its controls.
+function editReferenceSlice_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to editReferenceSlice (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function editSliceOrder_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to editSliceOrder (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over editSliceOrder.
+function editSliceOrder_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to editSliceOrder (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on editSliceOrder and none of its controls.
+function editSliceOrder_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to editSliceOrder (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function editSliceNumber_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to editSliceNumber (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over editSliceNumber.
+function editSliceNumber_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to editSliceNumber (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on editSliceNumber and none of its controls.
+function editSliceNumber_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to editSliceNumber (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function checkbox_FCtotal_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_FCtotal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over checkbox_FCtotal.
+function checkbox_FCtotal_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_FCtotal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on checkbox_FCtotal and none of its controls.
+function checkbox_FCtotal_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_FCtotal (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function checkboxCovremoveAfterNormalizeFiltering_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to checkboxCovremoveAfterNormalizeFiltering (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over checkboxCovremoveAfterNormalizeFiltering.
+function checkboxCovremoveAfterNormalizeFiltering_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to checkboxCovremoveAfterNormalizeFiltering (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on checkboxCovremoveAfterNormalizeFiltering and none of its controls.
+function checkboxCovremoveAfterNormalizeFiltering_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to checkboxCovremoveAfterNormalizeFiltering (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function checkboxCalFC_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to checkboxCalFC (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over checkboxCalFC.
+function checkboxCalFC_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to checkboxCalFC (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on checkboxCalFC and none of its controls.
+function checkboxCalFC_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to checkboxCalFC (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function checkbox_ICAtotal_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_ICAtotal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over checkbox_ICAtotal.
+function checkbox_ICAtotal_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_ICAtotal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on checkbox_ICAtotal and none of its controls.
+function checkbox_ICAtotal_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_ICAtotal (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function checkbox_restICA_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_restICA (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over checkbox_restICA.
+function checkbox_restICA_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_restICA (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on checkbox_taskICA and none of its controls.
+function checkbox_taskICA_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_taskICA (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function checkbox_DICIICA_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_DICIICA (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over checkbox_DICIICA.
+function checkbox_DICIICA_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_DICIICA (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on checkbox_DICIICA and none of its controls.
+function checkbox_DICIICA_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_DICIICA (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over edit_rest_TNC.
+function edit_rest_TNC_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to edit_rest_TNC (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on edit_rest_TNC and none of its controls.
+function edit_rest_TNC_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to edit_rest_TNC (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function edit_task_TNC_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to edit_task_TNC (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over edit_task_TNC.
+function edit_task_TNC_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to edit_task_TNC (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on edit_task_TNC and none of its controls.
+function edit_task_TNC_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to edit_task_TNC (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function pushbuttonViewComponents_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonViewComponents (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over pushbuttonViewComponents.
+function pushbuttonViewComponents_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonViewComponents (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on pushbuttonViewComponents and none of its controls.
+function pushbuttonViewComponents_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonViewComponents (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function checkbox_taskactivation_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_taskactivation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over checkbox_taskactivation.
+function checkbox_taskactivation_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_taskactivation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on checkbox_taskactivation and none of its controls.
+function checkbox_taskactivation_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox_taskactivation (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function radiobutton_task_condition1_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to radiobutton_task_condition1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over radiobutton_task_condition1.
+function radiobutton_task_condition1_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to radiobutton_task_condition1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on radiobutton_task_condition1 and none of its controls.
+function radiobutton_task_condition1_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to radiobutton_task_condition1 (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function edit_Onset1_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Onset1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over edit_Onset1.
+function edit_Onset1_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Onset1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on edit_Onset1 and none of its controls.
+function edit_Onset1_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Onset1 (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function edit_Duration1_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Duration1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over edit_Duration1.
+function edit_Duration1_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Duration1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on edit_Duration1 and none of its controls.
+function edit_Duration1_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Duration1 (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function edit_taskname_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to edit_taskname (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over edit_taskname.
+function edit_taskname_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to edit_taskname (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on edit_taskname and none of its controls.
+function edit_taskname_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to edit_taskname (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function radiobutton_task_condition2_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to radiobutton_task_condition2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over radiobutton_task_condition2.
+function radiobutton_task_condition2_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to radiobutton_task_condition2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on radiobutton_task_condition2 and none of its controls.
+function radiobutton_task_condition2_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to radiobutton_task_condition2 (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function edit_Onset2_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Onset2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over edit_Onset2.
+function edit_Onset2_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Onset2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on edit_Onset2 and none of its controls.
+function edit_Onset2_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Onset2 (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function edit_Duration2_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Duration2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over edit_Duration2.
+function edit_Duration2_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Duration2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on edit_Duration2 and none of its controls.
+function edit_Duration2_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Duration2 (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function editStartingDirName_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to editStartingDirName (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over editStartingDirName.
+function editStartingDirName_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to editStartingDirName (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on editStartingDirName and none of its controls.
+function editStartingDirName_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to editStartingDirName (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function editFunctionalSessions_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to editFunctionalSessions (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over editFunctionalSessions.
+function editFunctionalSessions_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to editFunctionalSessions (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on editFunctionalSessions and none of its controls.
+function editFunctionalSessions_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to editFunctionalSessions (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function pushbuttonSave_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonSave (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over pushbuttonSave.
+function pushbuttonSave_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonSave (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on pushbuttonSave and none of its controls.
+function pushbuttonSave_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonSave (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function pushbuttonLoad_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonLoad (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on pushbuttonLoad and none of its controls.
+function pushbuttonLoad_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonLoad (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object deletion, before destroying properties.
+function pushbuttonRun_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonRun (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over pushbuttonRun.
+function pushbuttonRun_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonRun (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on pushbuttonRun and none of its controls.
+function pushbuttonRun_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to pushbuttonRun (see GCBO)
 % eventdata  structure with the following fields (see UICONTROL)
 %	Key: name of the key that was pressed, in lower case
 %	Character: character interpretation of the key(s) that was pressed
