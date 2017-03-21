@@ -1,5 +1,5 @@
-function [Error]=TumorProcessing_main(AutoDataProcessParameter)
-% FORMAT [Error]=TumorProcessing_main(AutoDataProcessParameter)
+function [Error]=PreSurgMappProcessing_main(AutoDataProcessParameter)
+% FORMAT [Error]=PreSurgMappProcessing_main(AutoDataProcessParameter)
 % Input:
 %   AutoDataProcessParameter - the parameters for auto data processing
 % Output:
@@ -15,14 +15,14 @@ function [Error]=TumorProcessing_main(AutoDataProcessParameter)
 % Citing Information:
 % The processing was carried out by using PreSurgMapp,which is based on SPM8, REST, DPARSFA and MICA.
 
-% Last Modified by Huiyuan Huang on 25-Jan-2016
+% Last Modified by Huiyuan Huang on 15-Sep-2016
 
 if ischar(AutoDataProcessParameter)  %If inputed a .mat file name. (Cfg inside)
     load(AutoDataProcessParameter);
     AutoDataProcessParameter=Cfg;
 end
 
-[ProgramPath, fileN, extn] = fileparts(which('TumorProcessing_main.m'));
+[ProgramPath, fileN, extn] = fileparts(which('PreSurgMappProcessing_main.m'));
 AutoDataProcessParameter.SubjectNum=length(AutoDataProcessParameter.SubjectID);
 Error=[];
 addpath([ProgramPath,filesep,'Subfunctions']);
@@ -31,7 +31,7 @@ addpath([ProgramPath,filesep,'Subfunctions']);
 SPMversion=str2double(SPMversion(end));
 
 
-%Make compatible with missing parameters. YAN Chao-Gan, 100420.
+%Make compatible with missing parameters.
 if ~isfield(AutoDataProcessParameter,'DataProcessDir')
     AutoDataProcessParameter.DataProcessDir=AutoDataProcessParameter.WorkingDir;
 end
@@ -141,7 +141,7 @@ end
 if ~isfield(AutoDataProcessParameter,'IsExtractAALTC')
     AutoDataProcessParameter.IsExtractAALTC=0;
 end
-if ~isfield(AutoDataProcessParameter,'IsNormalizeToSymmetricGroupT1Mean') %YAN Chao-Gan 121221.
+if ~isfield(AutoDataProcessParameter,'IsNormalizeToSymmetricGroupT1Mean')
     AutoDataProcessParameter.IsNormalizeToSymmetricGroupT1Mean=0;
 end
 if ~isfield(AutoDataProcessParameter,'IsCalVMHC')
@@ -150,6 +150,7 @@ end
 if ~isfield(AutoDataProcessParameter,'IsCWAS')
     AutoDataProcessParameter.IsCWAS=0;
 end
+
 % HHY 20150506
 if ~isfield(AutoDataProcessParameter,'IsCalFCtotal')
     AutoDataProcessParameter.IsCalFCtotal=0;
@@ -172,7 +173,6 @@ end
 
 
 % Multiple Sessions Processing
-% YAN Chao-Gan, 111215 added.
 FunSessionPrefixSet={''}; %The first session doesn't need a prefix. From the second session, need a prefix such as 'S2_';
 for iFunSession=2:AutoDataProcessParameter.FunctionalSessionNumber
     FunSessionPrefixSet=[FunSessionPrefixSet;{['S',num2str(iFunSession),'_']}];
@@ -189,21 +189,21 @@ if (AutoDataProcessParameter.IsNeedConvertFunDCM2IMG==1)
             OutputDir=[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,AutoDataProcessParameter.SubjectID{i}];
             mkdir(OutputDir);
             DirDCM=dir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunRaw',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunRaw',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.*']);
-            if strcmpi(DirDCM(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
+            if strcmpi(DirDCM(3).name,'.DS_Store')
                 StartIndex=4;
             else
                 StartIndex=3;
             end
             InputFilename=[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunRaw',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirDCM(StartIndex).name];
             
-            %YAN Chao-Gan 120817.
+            
             y_Call_dcm2nii(InputFilename, OutputDir, 'DefaultINI');
             
             fprintf(['Converting Functional Images:',AutoDataProcessParameter.SubjectID{i},' OK']);
         end
         fprintf('\n');
     end
-    AutoDataProcessParameter.StartingDirName='FunImg';   %Now start with FunImg directory. 101010
+    AutoDataProcessParameter.StartingDirName='FunImg';   %Now start with FunImg directory.
 end
 
 
@@ -214,14 +214,14 @@ if (AutoDataProcessParameter.IsNeedConvertT1DCM2IMG==1)
         OutputDir=[AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i}];
         mkdir(OutputDir);
         DirDCM=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Raw',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Raw',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.*']);
-        if strcmpi(DirDCM(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
+        if strcmpi(DirDCM(3).name,'.DS_Store')  % for MAC OS compatablie
             StartIndex=4;
         else
             StartIndex=3;
         end
         InputFilename=[AutoDataProcessParameter.DataProcessDir,filesep,'T1Raw',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirDCM(StartIndex).name];
         
-        %YAN Chao-Gan 120817.
+        
         y_Call_dcm2nii(InputFilename, OutputDir, 'DefaultINI');
         
         fprintf(['Converting T1 Images:',AutoDataProcessParameter.SubjectID{i},' OK']);
@@ -235,7 +235,7 @@ end
 if isfield(AutoDataProcessParameter,'TR')
     if AutoDataProcessParameter.TR==0  % Need to retrieve the TR information from the NIfTI images
         if ~( strcmpi(AutoDataProcessParameter.StartingDirName,'T1Raw') || strcmpi(AutoDataProcessParameter.StartingDirName,'T1Img') )  %Only need for functional processing
-            if (2==exist([AutoDataProcessParameter.DataProcessDir,filesep,'TRInfo.tsv'],'file'))  %If the TR information is stored in TRInfo.tsv. %YAN Chao-Gan, 130612
+            if (2==exist([AutoDataProcessParameter.DataProcessDir,filesep,'TRInfo.tsv'],'file'))  %If the TR information is stored in TRInfo.tsv.
                 
                 fid = fopen([AutoDataProcessParameter.DataProcessDir,filesep,'TRInfo.tsv']);
                 StringFilter = '%s';
@@ -260,7 +260,7 @@ if isfield(AutoDataProcessParameter,'TR')
                 
             elseif (2==exist([AutoDataProcessParameter.DataProcessDir,filesep,'TRSet.txt'],'file'))  %If the TR information is stored in TRSet.txt (DPARSF V2.2).
                 TRSet = load([AutoDataProcessParameter.DataProcessDir,filesep,'TRSet.txt']);
-                TRSet = TRSet'; %YAN Chao-Gan 130612. This is for the compatibility with DPARSFA V2.2. Cause the TRSet saved there is in a transpose manner.
+                TRSet = TRSet';% This is for the compatibility with DPARSFA V2.2. Cause the TRSet saved there is in a transpose manner.
             else
                 
                 TRSet = zeros(AutoDataProcessParameter.SubjectNum,AutoDataProcessParameter.FunctionalSessionNumber);
@@ -271,8 +271,8 @@ if isfield(AutoDataProcessParameter,'TR')
                     parfor i=1:AutoDataProcessParameter.SubjectNum
                         cd([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}]);
                         DirImg=dir('*.img');
-                        if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files. % Either in .nii.gz or in .nii
-                            DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                        if isempty(DirImg)  % Also support .nii files. % Either in .nii.gz or in .nii
+                            DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip;
                             if length(DirImg)==1
                                 gunzip(DirImg(1).name);
                                 delete(DirImg(1).name);
@@ -296,9 +296,9 @@ if isfield(AutoDataProcessParameter,'TR')
                         VoxelSize(i,iFunSession,:) = sqrt(sum(Nii.mat(1:3,1:3).^2));
                     end
                 end
-                %save([AutoDataProcessParameter.DataProcessDir,filesep,'TRSet.txt'], 'TRSet', '-ASCII', '-DOUBLE','-TABS'); %YAN Chao-Gan, 121214. Save the TR information.
+                %save([AutoDataProcessParameter.DataProcessDir,filesep,'TRSet.txt'], 'TRSet', '-ASCII', '-DOUBLE','-TABS'); % Save the TR information.
                 
-                %YAN Chao-Gan, 130612. No longer save to TRSet.txt, but save to TRInfo.tsv with information of Slice Number, Time Points, Voxel Size.
+                % No longer save to TRSet.txt, but save to TRInfo.tsv with information of Slice Number, Time Points, Voxel Size.
                 
                 
                 %Write the information as TRInfo.tsv
@@ -353,8 +353,8 @@ if (AutoDataProcessParameter.RemoveFirstTimePoints>0)
         parfor i=1:AutoDataProcessParameter.SubjectNum
             cd([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}]);
             DirImg=dir('*.img');
-            if ~isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files.
-                if AutoDataProcessParameter.TimePoints>0 && length(DirImg)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
+            if ~isempty(DirImg)  % Also support .nii files.
+                if AutoDataProcessParameter.TimePoints>0 && length(DirImg)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0.
                     Error=[Error;{['Error in Removing First ',num2str(AutoDataProcessParameter.RemoveFirstTimePoints),'Time Points: ',AutoDataProcessParameter.SubjectID{i}]}];
                 end
                 for j=1:AutoDataProcessParameter.RemoveFirstTimePoints
@@ -362,7 +362,7 @@ if (AutoDataProcessParameter.RemoveFirstTimePoints>0)
                     delete([DirImg(j).name(1:end-4),'.hdr']);
                 end
             else % either in .nii.gz or in .nii
-                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip;
                 if length(DirImg)==1
                     gunzip(DirImg(1).name);
                     delete(DirImg(1).name);
@@ -371,7 +371,7 @@ if (AutoDataProcessParameter.RemoveFirstTimePoints>0)
                 DirImg=dir('*.nii');
                 
                 if length(DirImg)>1  %3D .nii images.
-                    if AutoDataProcessParameter.TimePoints>0 && length(DirImg)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
+                    if AutoDataProcessParameter.TimePoints>0 && length(DirImg)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0.
                         Error=[Error;{['Error in Removing First ',num2str(AutoDataProcessParameter.RemoveFirstTimePoints),'Time Points: ',AutoDataProcessParameter.SubjectID{i}]}];
                     end
                     for j=1:AutoDataProcessParameter.RemoveFirstTimePoints
@@ -379,7 +379,7 @@ if (AutoDataProcessParameter.RemoveFirstTimePoints>0)
                     end
                 else %4D .nii images
                     Nii  = nifti(DirImg(1).name);
-                    if AutoDataProcessParameter.TimePoints>0 && size(Nii.dat,4)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
+                    if AutoDataProcessParameter.TimePoints>0 && size(Nii.dat,4)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0.
                         Error=[Error;{['Error in Removing First ',num2str(AutoDataProcessParameter.RemoveFirstTimePoints),'Time Points: ',AutoDataProcessParameter.SubjectID{i}]}];
                     end
                     y_Write4DNIfTI(Nii.dat(:,:,:,AutoDataProcessParameter.RemoveFirstTimePoints+1:end),Nii,DirImg(1).name);
@@ -410,8 +410,8 @@ if (AutoDataProcessParameter.IsSliceTiming==1)
             cd([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}]);
             DirImg=dir('*.img');
             
-            if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files. % Either in .nii.gz or in .nii
-                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+            if isempty(DirImg)  % Also support .nii files. % Either in .nii.gz or in .nii
+                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip;
                 if length(DirImg)==1
                     gunzip(DirImg(1).name);
                     delete(DirImg(1).name);
@@ -420,7 +420,7 @@ if (AutoDataProcessParameter.IsSliceTiming==1)
             end
             
             if length(DirImg)>1  %3D .img or .nii images.
-                if AutoDataProcessParameter.TimePoints>0 && length(DirImg)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
+                if AutoDataProcessParameter.TimePoints>0 && length(DirImg)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0.
                     Error=[Error;{['Error in Slice Timing, time point number doesn''t match: ',AutoDataProcessParameter.SubjectID{i}]}];
                 end
                 FileList=[];
@@ -429,7 +429,7 @@ if (AutoDataProcessParameter.IsSliceTiming==1)
                 end
             else %4D .nii images
                 Nii  = nifti(DirImg(1).name);
-                if AutoDataProcessParameter.TimePoints>0 && size(Nii.dat,4)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
+                if AutoDataProcessParameter.TimePoints>0 && size(Nii.dat,4)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0.
                     Error=[Error;{['Error in Slice Timing, time point number doesn''t match: ',AutoDataProcessParameter.SubjectID{i}]}];
                 end
                 FileList=[];
@@ -448,7 +448,7 @@ if (AutoDataProcessParameter.IsSliceTiming==1)
                 SliceNumber = size(Nii.dat,3);
                 SPMJOB.jobs{1,1}.temporal{1,1}.st.nslices = SliceNumber;
                 
-                if exist([AutoDataProcessParameter.DataProcessDir,filesep,'SliceOrderInfo.tsv'])==2 % YAN Chao-Gan, 130524. Read the slice timing information from a tsv file (Tab-separated values)
+                if exist([AutoDataProcessParameter.DataProcessDir,filesep,'SliceOrderInfo.tsv'])==2 % Read the slice timing information from a tsv file (Tab-separated values)
                     
                     fid = fopen([AutoDataProcessParameter.DataProcessDir,filesep,'SliceOrderInfo.tsv']);
                     StringFilter = '%s';
@@ -507,7 +507,7 @@ if (AutoDataProcessParameter.IsSliceTiming==1)
             fprintf(['Slice Timing Setup:',AutoDataProcessParameter.SubjectID{i},' OK\n']);
             if SPMversion==5
                 spm_jobman('run',SPMJOB.jobs);
-            elseif SPMversion==8  %YAN Chao-Gan, 090925. SPM8 compatible.
+            elseif SPMversion==8  % SPM8 compatible.
                 SPMJOB.jobs = spm_jobman('spm5tospm8',{SPMJOB.jobs});
                 spm_jobman('run',SPMJOB.jobs{1});
             else
@@ -543,8 +543,8 @@ if (AutoDataProcessParameter.IsRealign==1)
             DirImg=dir('*.img');
             
             
-            if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files. % Either in .nii.gz or in .nii
-                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+            if isempty(DirImg)  % Also support .nii files. % Either in .nii.gz or in .nii
+                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip;
                 if length(DirImg)==1
                     gunzip(DirImg(1).name);
                     delete(DirImg(1).name);
@@ -553,7 +553,7 @@ if (AutoDataProcessParameter.IsRealign==1)
             end
             
             if length(DirImg)>1  %3D .img or .nii images.
-                if AutoDataProcessParameter.TimePoints>0 && length(DirImg)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
+                if AutoDataProcessParameter.TimePoints>0 && length(DirImg)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0.
                     Error=[Error;{['Error in Realign, time point number doesn''t match: ',AutoDataProcessParameter.SubjectID{i}]}];
                 end
                 FileList=[];
@@ -562,7 +562,7 @@ if (AutoDataProcessParameter.IsRealign==1)
                 end
             else %4D .nii images
                 Nii  = nifti(DirImg(1).name);
-                if AutoDataProcessParameter.TimePoints>0 && size(Nii.dat,4)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
+                if AutoDataProcessParameter.TimePoints>0 && size(Nii.dat,4)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0.
                     Error=[Error;{['Error in Realign, time point number doesn''t match: ',AutoDataProcessParameter.SubjectID{i}]}];
                 end
                 FileList=[];
@@ -578,12 +578,12 @@ if (AutoDataProcessParameter.IsRealign==1)
         fprintf(['Realign Setup:',AutoDataProcessParameter.SubjectID{i},' OK\n']);
         if SPMversion==5
             spm_jobman('run',SPMJOB.jobs);
-        elseif SPMversion==8  %YAN Chao-Gan, 090925. SPM8 compatible.
+        elseif SPMversion==8  % SPM8 compatible.
             SPMJOB.jobs = spm_jobman('spm5tospm8',{SPMJOB.jobs});
             spm_jobman('run',SPMJOB.jobs{1});
         else
-            uiwait(msgbox('The current SPM version is not supported by DPARSF. Please install SPM5 or SPM8 first.','Invalid SPM Version.'));
-            Error=[Error;{['Error in Realign: The current SPM version is not supported by DPARSF. Please install SPM5 or SPM8 first.']}];
+            uiwait(msgbox('The current SPM version is not supported by PreSurgMapp. Please install SPM5 or SPM8 first.','Invalid SPM Version.'));   % revised by HHY, 20160914
+            Error=[Error;{['Error in Realign: The current SPM version is not supported by PreSurgMapp. Please install SPM5 or SPM8 first.']}];
         end
     end
     
@@ -612,7 +612,7 @@ if (AutoDataProcessParameter.IsRealign==1)
             cd([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}]);
             mkdir(['..',filesep,'..',filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'R',filesep,AutoDataProcessParameter.SubjectID{i}])
             DirImg=dir('*.img');
-            if ~isempty(DirImg)  %YAN Chao-Gan, 111114
+            if ~isempty(DirImg)
                 movefile('r*.img',['..',filesep,'..',filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'R',filesep,AutoDataProcessParameter.SubjectID{i}])
                 movefile('r*.hdr',['..',filesep,'..',filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'R',filesep,AutoDataProcessParameter.SubjectID{i}])
             else
@@ -674,7 +674,7 @@ if (AutoDataProcessParameter.IsRealign==1)
             
             %Calculate FD Jenkinson (FSL's relative RMS) (Jenkinson, M., Bannister, P., Brady, M., Smith, S., 2002. Improved optimization for the robust and accurate linear registration and motion correction of brain images. Neuroimage 17, 825-841. Jenkinson, M. 1999. Measuring transformation error by RMS deviation. Internal Technical Report TR99MJ1, FMRIB Centre, University of Oxford. Available at www.fmrib.ox.ac.uk/analysis/techrep for downloading.)
             DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean*.img']);
-            if isempty(DirMean)  %YAN Chao-Gan, 111114. Also support .nii files.
+            if isempty(DirMean)  % Also support .nii files.
                 DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean*.nii']);
             end
             if ~isempty(DirMean)
@@ -734,21 +734,21 @@ end
 %Coregister T1 Image to Functional space
 if (AutoDataProcessParameter.IsNeedT1CoregisterToFun==1)
     %Backup the T1 images to T1ImgCoreg
-    % Check if co* image exist. Added by YAN Chao-Gan 100510.
+    % Check if co* image exist.
     cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{1}]);
     DirCo=dir('c*.img');
     if isempty(DirCo)
-        DirCo=dir('c*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+        DirCo=dir('c*.nii.gz');  % Search .nii.gz and unzip;
         if length(DirCo)==1
             gunzip(DirCo(1).name);
             delete(DirCo(1).name);
         end
-        DirCo=dir('c*.nii');  %YAN Chao-Gan, 111114. Also support .nii files.
+        DirCo=dir('c*.nii');  % Also support .nii files.
     end
     if isempty(DirCo)
         DirImg=dir('*.img');
-        if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files.
-            DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+        if isempty(DirImg)  % Also support .nii files.
+            DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip;
             if length(DirImg)>=1
                 for j=1:length(DirImg)
                     gunzip(DirImg(j).name);
@@ -778,14 +778,14 @@ if (AutoDataProcessParameter.IsNeedT1CoregisterToFun==1)
     parfor i=1:AutoDataProcessParameter.SubjectNum
         cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i}]);
         mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i}])
-        % Check in co* image exist. Added by YAN Chao-Gan 100510.
+        % Check in co* image exist.
         if UseNoCoT1Image==0
             DirImg=dir('c*.img');
-            if ~isempty(DirImg)  %YAN Chao-Gan, 111114
+            if ~isempty(DirImg)
                 copyfile('c*.hdr',[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i}])
                 copyfile('c*.img',[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i}])
             else
-                DirImg=dir('c*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                DirImg=dir('c*.nii.gz');  % Search .nii.gz and unzip;
                 if length(DirImg)==1
                     gunzip(DirImg(1).name);
                     delete(DirImg(1).name);
@@ -794,11 +794,11 @@ if (AutoDataProcessParameter.IsNeedT1CoregisterToFun==1)
             end
         else
             DirImg=dir('*.img');
-            if ~isempty(DirImg)  %YAN Chao-Gan, 111114
+            if ~isempty(DirImg)
                 copyfile('*.hdr',[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i}])
                 copyfile('*.img',[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i}])
             else
-                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip;
                 if length(DirImg)>=1
                     for j=1:length(DirImg)
                         gunzip(DirImg(j).name);
@@ -812,11 +812,11 @@ if (AutoDataProcessParameter.IsNeedT1CoregisterToFun==1)
     end
     fprintf('\n');
     
-    % Check if mean* image generated in Head Motion Correction exist. Added by YAN Chao-Gan 101010.
+    % Check if mean* image generated in Head Motion Correction exist.
     if 7==exist([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{1}],'dir')
         DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{1},filesep,'mean*.img']);
-        if isempty(DirMean)  %YAN Chao-Gan, 111114. Also support .nii files.
-            DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{1},filesep,'mean*.nii.gz']);% Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+        if isempty(DirMean)  % Also support .nii files.
+            DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{1},filesep,'mean*.nii.gz']);% Search .nii.gz and unzip;
             if length(DirMean)==1
                 gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirMean(1).name]);
                 delete([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirMean(1).name]);
@@ -833,8 +833,8 @@ if (AutoDataProcessParameter.IsNeedT1CoregisterToFun==1)
             fprintf('\nCalculate mean functional brain (%s) for "%s" since there is no mean* image generated in Head Motion Correction exist.\n',AutoDataProcessParameter.StartingDirName, AutoDataProcessParameter.SubjectID{i});
             cd([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}]);
             DirImg=dir('*.img');
-            if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files.
-                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+            if isempty(DirImg)  % Also support .nii files.
+                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip;
                 if length(DirImg)==1
                     gunzip(DirImg(1).name);
                     delete(DirImg(1).name);
@@ -853,7 +853,7 @@ if (AutoDataProcessParameter.IsNeedT1CoregisterToFun==1)
                     end
                 end
             else %4D .nii images
-                [AllVolume, Header] = rest_ReadNiftiImage(DirImg(1).name); %Revised according to ORSOLINI's suggestion ~ 12 february 2013
+                [AllVolume, Header] = rest_ReadNiftiImage(DirImg(1).name);
             end
             
             AllVolume=mean(AllVolume,4);
@@ -871,12 +871,12 @@ if (AutoDataProcessParameter.IsNeedT1CoregisterToFun==1)
         SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Coregister.mat']);
         
         RefDir=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean*.img']);
-        if isempty(RefDir)  %YAN Chao-Gan, 111114. Also support .nii files.
+        if isempty(RefDir)  % Also support .nii files.
             RefDir=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean*.nii']);
         end
         RefFile=[AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,RefDir(1).name,',1'];
         SourceDir=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
-        if isempty(SourceDir)  %YAN Chao-Gan, 111114. Also support .nii files.
+        if isempty(SourceDir)  % Also support .nii files.
             SourceDir=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
         end
         SourceFile=[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,SourceDir(1).name];
@@ -886,7 +886,7 @@ if (AutoDataProcessParameter.IsNeedT1CoregisterToFun==1)
         fprintf(['Coregister Setup:',AutoDataProcessParameter.SubjectID{i},' OK\n']);
         if SPMversion==5
             spm_jobman('run',SPMJOB.jobs);
-        elseif SPMversion==8  %YAN Chao-Gan, 090925. SPM8 compatible.
+        elseif SPMversion==8  % SPM8 compatible.
             SPMJOB.jobs = spm_jobman('spm5tospm8',{SPMJOB.jobs});
             spm_jobman('run',SPMJOB.jobs{1});
         else
@@ -914,8 +914,8 @@ if (AutoDataProcessParameter.IsCovremove==1) && ((strcmpi(AutoDataProcessParamet
             
             % Set the reference image
             DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean*.img']);
-            if isempty(DirMean)  %YAN Chao-Gan, 111114. Also support .nii files.
-                DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean*.nii.gz']);% Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+            if isempty(DirMean)  % Also support .nii files.
+                DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean*.nii.gz']);% Search .nii.gz and unzip;
                 if length(DirMean)==1
                     gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name]);
                     delete([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name]);
@@ -1008,7 +1008,7 @@ end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Reorient Interactively After Coregistration for better orientation in Segmentation      Added by HHY 29150603
+%% Reorient Interactively After Coregistration for better orientation in Segmentation      Added by HHY 20150603
 %Do not need parfor
 
 if (AutoDataProcessParameter.IsNeedReorientInteractivelyAfterCoreg==1)
@@ -1022,27 +1022,7 @@ if (AutoDataProcessParameter.IsNeedReorientInteractivelyAfterCoreg==1)
         FileList=[];
         
         DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
-        if isempty(DirT1ImgCoreg)  %YAN Chao-Gan, 111114. Also support .nii files.
-            DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii.gz']);
-            if length(DirT1ImgCoreg)==1
-                gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Reorient Interactively After Coregistration for better orientation in Segmentation      Added by HHY 29150603
-%Do not need parfor
-
-if (AutoDataProcessParameter.IsNeedReorientInteractivelyAfterCoreg==1)
-    
-    if ~(7==exist([AutoDataProcessParameter.DataProcessDir,filesep,'ReorientMats'],'dir'))
-        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'ReorientMats']);
-    end
-    %Reorient
-    cd([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName]);
-    for i=1:AutoDataProcessParameter.SubjectNum
-        FileList=[];
-        
-        DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
-        if isempty(DirT1ImgCoreg)  %YAN Chao-Gan, 111114. Also support .nii files.
+        if isempty(DirT1ImgCoreg)  % Also support .nii files.
             DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii.gz']);
             if length(DirT1ImgCoreg)==1
                 gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
@@ -1055,8 +1035,8 @@ if (AutoDataProcessParameter.IsNeedReorientInteractivelyAfterCoreg==1)
         % if the mean* functional image exist, then also reorient it.
         if 7==exist([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i}],'dir')
             DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean*.img']);
-            if isempty(DirMean)  %YAN Chao-Gan, 111114. Also support .nii files.
-                DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean*.nii.gz']);% Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+            if isempty(DirMean)  % Also support .nii files.
+                DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean*.nii.gz']);% Search .nii.gz and unzip;
                 if length(DirMean)==1
                     gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name]);
                     delete([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name]);
@@ -1095,8 +1075,8 @@ if (AutoDataProcessParameter.IsNeedReorientInteractivelyAfterCoreg==1)
                 %Apply to the functional images
                 cd([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}]);
                 DirImg=dir('*.img');
-                if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files.
-                    DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                if isempty(DirImg)  % Also support .nii files.
+                    DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip;
                     if length(DirImg)==1
                         gunzip(DirImg(1).name);
                         delete(DirImg(1).name);
@@ -1162,8 +1142,8 @@ if (AutoDataProcessParameter.IsSmooth>=1) && strcmpi(AutoDataProcessParameter.Sm
             for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
                 cd([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}]);
                 DirImg=dir('*.img');
-                if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files. % Either in .nii.gz or in .nii
-                    DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                if isempty(DirImg)  % Also support .nii files. % Either in .nii.gz or in .nii
+                    DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip;
                     if length(DirImg)==1
                         gunzip(DirImg(1).name);
                         delete(DirImg(1).name);
@@ -1172,7 +1152,7 @@ if (AutoDataProcessParameter.IsSmooth>=1) && strcmpi(AutoDataProcessParameter.Sm
                 end
                 
                 if length(DirImg)>1  %3D .img or .nii images.
-                    if AutoDataProcessParameter.TimePoints>0 && length(DirImg)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
+                    if AutoDataProcessParameter.TimePoints>0 && length(DirImg)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0.
                         Error=[Error;{['Error in Smooth: ',AutoDataProcessParameter.SubjectID{i}]}];
                     end
                     for j=1:length(DirImg)
@@ -1180,12 +1160,12 @@ if (AutoDataProcessParameter.IsSmooth>=1) && strcmpi(AutoDataProcessParameter.Sm
                     end
                 else %4D .nii images
                     Nii  = nifti(DirImg(1).name);
-                    if AutoDataProcessParameter.TimePoints>0 && size(Nii.dat,4)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
+                    if AutoDataProcessParameter.TimePoints>0 && size(Nii.dat,4)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0.
                         Error=[Error;{['Error in Smooth: ',AutoDataProcessParameter.SubjectID{i}]}];
                     end
                     
                     FileList=[FileList;{[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]}];
-                    %YAN Chao-Gan, 130301. Fixed a bug (leave session 1) in smooth in multiple sessions.  %FileList={[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]};
+                    
                     
                 end
             end
@@ -1195,7 +1175,7 @@ if (AutoDataProcessParameter.IsSmooth>=1) && strcmpi(AutoDataProcessParameter.Sm
             SPMJOB.jobs{1,1}.spatial{1,1}.smooth.fwhm = AutoDataProcessParameter.Smooth.FWHM;
             if SPMversion==5
                 spm_jobman('run',SPMJOB.jobs);
-            elseif SPMversion==8  %YAN Chao-Gan, 090925. SPM8 compatible.
+            elseif SPMversion==8  % SPM8 compatible.
                 SPMJOB.jobs = spm_jobman('spm5tospm8',{SPMJOB.jobs});
                 spm_jobman('run',SPMJOB.jobs{1});
             else
@@ -1205,7 +1185,7 @@ if (AutoDataProcessParameter.IsSmooth>=1) && strcmpi(AutoDataProcessParameter.Sm
             fprintf(['Smooth:',AutoDataProcessParameter.SubjectID{i},' OK']);
         end
         
-    elseif (AutoDataProcessParameter.IsSmooth==2)   %YAN Chao-Gan, 111111. Smooth by DARTEL. The smoothing that is a part of the normalization to MNI space computes these average intensities from the original data, rather than the warped versions. When the data are warped, some voxels will grow and others will shrink. This will change the regional averages, with more weighting towards those voxels that have grows.
+    elseif (AutoDataProcessParameter.IsSmooth==2)   % Smooth by DARTEL. The smoothing that is a part of the normalization to MNI space computes these average intensities from the original data, rather than the warped versions. When the data are warped, some voxels will grow and others will shrink. This will change the regional averages, with more weighting towards those voxels that have grows.
         
         parfor i=1:AutoDataProcessParameter.SubjectNum
             SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Dartel_NormaliseToMNI_FewSubjects.mat']);
@@ -1223,8 +1203,8 @@ if (AutoDataProcessParameter.IsSmooth>=1) && strcmpi(AutoDataProcessParameter.Sm
             for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
                 cd([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName(1:end-1),filesep,AutoDataProcessParameter.SubjectID{i}]);
                 DirImg=dir('*.img');
-                if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files. % Either in .nii.gz or in .nii
-                    DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                if isempty(DirImg)  %Also support .nii files. % Either in .nii.gz or in .nii
+                    DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip;
                     if length(DirImg)==1
                         gunzip(DirImg(1).name);
                         delete(DirImg(1).name);
@@ -1233,7 +1213,7 @@ if (AutoDataProcessParameter.IsSmooth>=1) && strcmpi(AutoDataProcessParameter.Sm
                 end
                 
                 if length(DirImg)>1  %3D .img or .nii images.
-                    if AutoDataProcessParameter.TimePoints>0 && length(DirImg)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
+                    if AutoDataProcessParameter.TimePoints>0 && length(DirImg)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0.
                         Error=[Error;{['Error in Smooth: ',AutoDataProcessParameter.SubjectID{i}]}];
                     end
                     for j=1:length(DirImg)
@@ -1241,12 +1221,12 @@ if (AutoDataProcessParameter.IsSmooth>=1) && strcmpi(AutoDataProcessParameter.Sm
                     end
                 else %4D .nii images
                     Nii  = nifti(DirImg(1).name);
-                    if AutoDataProcessParameter.TimePoints>0 && size(Nii.dat,4)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
+                    if AutoDataProcessParameter.TimePoints>0 && size(Nii.dat,4)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0.
                         Error=[Error;{['Error in Smooth: ',AutoDataProcessParameter.SubjectID{i}]}];
                     end
                     
                     FileList=[FileList;{[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName(1:end-1),filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]}];
-                    %YAN Chao-Gan 130309. Fixed a bug in "Smooth by DARTEL" caused in last revision. %YAN Chao-Gan, 130301. Fixed a bug (leave session 1) in smooth in multiple sessions.  %FileList={[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]};
+                    
                     
                 end
             end
@@ -1286,7 +1266,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%Detrend
-%YAN Chao-Gan 120826: detrend is no longer needed if linear trend is included in nuisance regression. Keeping this function is for back compatibility
+% detrend is no longer needed if linear trend is included in nuisance regression. Keeping this function is for back compatibility
 if (AutoDataProcessParameter.IsDetrend==1)
     for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
         parfor i=1:AutoDataProcessParameter.SubjectNum
@@ -1311,7 +1291,6 @@ end
 
 
 % If don't need to Warp into original space, then check if the masks are appropriate and resample if not.
-% YAN Chao-Gan, 120827.
 
 if (AutoDataProcessParameter.IsWarpMasksIntoIndividualSpace==0) && ((AutoDataProcessParameter.IsCalALFF==1)||( (AutoDataProcessParameter.IsCovremove==1) && (strcmpi(AutoDataProcessParameter.Covremove.Timing,'AfterNormalizeFiltering')) )||(AutoDataProcessParameter.IsCalReHo==1)||(AutoDataProcessParameter.IsCalDegreeCentrality==1)||(AutoDataProcessParameter.IsCalFC==1)||(AutoDataProcessParameter.IsCalVMHC==1)||(AutoDataProcessParameter.IsCWAS==1))
     
@@ -1329,10 +1308,10 @@ if (AutoDataProcessParameter.IsWarpMasksIntoIndividualSpace==0) && ((AutoDataPro
     end
     
     RefFile=dir([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{1},filesep,'*.img']);
-    if isempty(RefFile)  %YAN Chao-Gan, 120827. Also support .nii.gz files.
+    if isempty(RefFile)  % Also support .nii.gz files.
         RefFile=dir([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{1},filesep,'*.nii.gz']);
     end
-    if isempty(RefFile)  %YAN Chao-Gan, 111114. Also support .nii files.
+    if isempty(RefFile)  %Also support .nii files.
         RefFile=dir([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{1},filesep,'*.nii']);
     end
     RefFile=[AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{1},filesep,RefFile(1).name];
@@ -1368,7 +1347,7 @@ if (AutoDataProcessParameter.IsFilter==1) && (strcmpi(AutoDataProcessParameter.F
                 TR, ...
                 AutoDataProcessParameter.Filter.ALowPass_HighCutoff, ...
                 AutoDataProcessParameter.Filter.AHighPass_LowCutoff, ...
-                AutoDataProcessParameter.Filter.AAddMeanBack, ...   %Revised by YAN Chao-Gan,100420. In according to the change of rest_bandpass.m. %AutoDataProcessParameter.Filter.ARetrend, ...
+                AutoDataProcessParameter.Filter.AAddMeanBack, ...
                 ''); % Just don't use mask in filtering. %AutoDataProcessParameter.Filter.AMaskFilename);
         end
     end
@@ -1401,7 +1380,7 @@ if (AutoDataProcessParameter.IsCovremove==1)
         FileList=[];
         
         DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
-        if isempty(DirT1ImgCoreg)  %YAN Chao-Gan, 111114. Also support .nii files.
+        if isempty(DirT1ImgCoreg)  % Also support .nii files.
             DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii.gz']);
             if length(DirT1ImgCoreg)==1
                 gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
@@ -1415,21 +1394,21 @@ if (AutoDataProcessParameter.IsCovremove==1)
         
         fprintf('select covariate for %s: \n',AutoDataProcessParameter.SubjectID{i});
         
-        global TumorProcessing_spm_image_Parameters
-        TumorProcessing_spm_image_Parameters.tag=1;
-        TumorProcessing_spm_image_Parameters.ReorientFileList=FileList;
+        global PreSurgMappProcessing_spm_image_Parameters
+        PreSurgMappProcessing_spm_image_Parameters.tag=1;
+        PreSurgMappProcessing_spm_image_Parameters.ReorientFileList=FileList;
         
         for j=1:20  % support for more covariate selecting,added by Huiyuan Huang 20140815
             
             
-            uiwait(TumorProcessing_spm_image('init',[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirT1ImgCoreg(1).name]));
-            if TumorProcessing_spm_image_Parameters.tag==0
+            uiwait(PreSurgMappProcessing_spm_image('init',[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirT1ImgCoreg(1).name]));
+            if PreSurgMappProcessing_spm_image_Parameters.tag==0
                 break
                 
             end
-            mat=TumorProcessing_spm_image_Parameters.ReorientMat;
+            mat=PreSurgMappProcessing_spm_image_Parameters.ReorientMat;
             save([AutoDataProcessParameter.DataProcessDir,filesep,'CovariateMats',filesep,AutoDataProcessParameter.SubjectID{i},'_Covariate',int2str(j),'.mat'],'mat') % save each covariate
-            %  clear global TumorProcessing_spm_image_Parameters
+            %  clear global PreSurgMappProcessing_spm_image_Parameters
             fprintf('select covariate for %s: OK\n',AutoDataProcessParameter.SubjectID{i});
             %  cd('..');
         end
@@ -1467,10 +1446,10 @@ if (AutoDataProcessParameter.IsCovremove==1) && ((strcmpi(AutoDataProcessParamet
             
             % Set the reference image
             RefFile=dir([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{1},filesep,'*.img']);
-            if isempty(RefFile)  %YAN Chao-Gan, 120827. Also support .nii.gz files.
+            if isempty(RefFile)  % Also support .nii.gz files.
                 RefFile=dir([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{1},filesep,'*.nii.gz']);
             end
-            if isempty(RefFile)  %YAN Chao-Gan, 111114. Also support .nii files.
+            if isempty(RefFile)  % Also support .nii files.
                 RefFile=dir([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{1},filesep,'*.nii']);
             end
             RefFile=[AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{1},filesep,RefFile(1).name];
@@ -1554,7 +1533,7 @@ if (AutoDataProcessParameter.IsCovremove==1) && (strcmpi(AutoDataProcessParamete
             %Head Motion
             ImgCovModel = 1; %Default
             
-            CovariablesDef.CovMat = []; %YAN Chao-Gan, 130116. Fixed a bug when CovMat is not defined.
+            CovariablesDef.CovMat = [];
             
             if (AutoDataProcessParameter.Covremove.HeadMotion==1) %1: Use the current time point of rigid-body 6 realign parameters. e.g., Txi, Tyi, Tzi...
                 DirRP=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,FunSessionPrefixSet{iFunSession},'rp*']);
@@ -1608,7 +1587,7 @@ if (AutoDataProcessParameter.IsCovremove==1) && (strcmpi(AutoDataProcessParamete
             %Head Motion "Scrubbing" Regressors: each bad time point is a separate regressor
             if (AutoDataProcessParameter.Covremove.IsHeadMotionScrubbingRegressors==1)
                 
-                % Use FD_Power or FD_Jenkinson YAN Chao-Gan, 121225.
+                % Use FD_Power or FD_Jenkinson
                 FD = load([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.Covremove.HeadMotionScrubbingRegressors.FDType,'_',AutoDataProcessParameter.SubjectID{i},'.txt']);
                 %FD = load([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,FunSessionPrefixSet{iFunSession},'FD_Power_',AutoDataProcessParameter.SubjectID{i},'.txt']);
                 
@@ -1714,7 +1693,7 @@ if (AutoDataProcessParameter.IsCalFC==1)
         FileList=[];
         
         DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
-        if isempty(DirT1ImgCoreg)  %YAN Chao-Gan, 111114. Also support .nii files.
+        if isempty(DirT1ImgCoreg)  % Also support .nii files.
             DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii.gz']);
             if length(DirT1ImgCoreg)==1
                 gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
@@ -1728,19 +1707,19 @@ if (AutoDataProcessParameter.IsCalFC==1)
         
         fprintf('define ROI for %s: \n',AutoDataProcessParameter.SubjectID{i});
         
-        global TumorProcessing_spm_image_ROI_Parameters
-        TumorProcessing_spm_image_ROI_Parameters.tag=1;
-        TumorProcessing_spm_image_ROI_Parameters.T1FileList=FileList;
+        global PreSurgMappProcessing_spm_image_ROI_Parameters
+        PreSurgMappProcessing_spm_image_ROI_Parameters.tag=1;
+        PreSurgMappProcessing_spm_image_ROI_Parameters.T1FileList=FileList;
         
         for jj=1:20  % support for more ROI selecting,added by Huiyuan Huang 20140815
             
-            uiwait(TumorProcessing_spm_image_ROI('init',[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirT1ImgCoreg(1).name]));
-            if  TumorProcessing_spm_image_ROI_Parameters.tag==0
+            uiwait(PreSurgMappProcessing_spm_image_ROI('init',[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirT1ImgCoreg(1).name]));
+            if  PreSurgMappProcessing_spm_image_ROI_Parameters.tag==0
                 break
             end
-            mat= TumorProcessing_spm_image_ROI_Parameters.ROIMat;
+            mat= PreSurgMappProcessing_spm_image_ROI_Parameters.ROIMat;
             save([AutoDataProcessParameter.DataProcessDir,filesep,'ROIMats',filesep,AutoDataProcessParameter.SubjectID{i},'_ROI',int2str(jj),'.mat'],'mat') % save each ROI
-            %  clear global TumorProcessing_spm_image_Parameters
+            %  clear global PreSurgMappProcessing_spm_image_Parameters
             fprintf('define ROI for %s: OK\n',AutoDataProcessParameter.SubjectID{i});
             %  cd('..');
         end
@@ -1778,10 +1757,10 @@ if (~isempty(AutoDataProcessParameter.CalFC.ROIDef)) || (AutoDataProcessParamete
         Suffix='FCROI_'; %%!!! Change as in Function
         SubjectROI=AutoDataProcessParameter.CalFC.ROIDef;%%!!! Change as in Fuction
         RefFile=dir([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
-        if isempty(RefFile)  %YAN Chao-Gan, 111114. Also support .nii files.
+        if isempty(RefFile)  % Also support .nii files.
             RefFile=dir([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
         end
-        if isempty(RefFile)  %YAN Chao-Gan, 120827. Also support .nii files.
+        if isempty(RefFile)  % Also support .nii files.
             RefFile=dir([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii.gz']);
         end
         RefFile=[AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,RefFile(1).name];
@@ -2276,16 +2255,16 @@ if (AutoDataProcessParameter.IsCalICA==1)&&(AutoDataProcessParameter.IsCaltaskIC
     
 end
 
-%% Added by HHY 20130604
+%% Added by HHY 20150604
 %%%%%%% Automatic indentify task-related independent component %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if (AutoDataProcessParameter.IsCaltaskactivation==1)&&(AutoDataProcessParameter.IsCaltaskICA==1)
+if (AutoDataProcessParameter.IsCaltaskactivation==1)&&(AutoDataProcessParameter.IsCaltaskICA==1)&&(AutoDataProcessParameter.taskcondition==1)
     Impulsefunction=zeros(1,AutoDataProcessParameter.TimePoints);
-    if AutoDataProcessParameter.taskactivation.Duration==0
-        onset=AutoDataProcessParameter.taskactivation.Onset';
+    if AutoDataProcessParameter.taskactivation.Duration1==0
+        onset=AutoDataProcessParameter.taskactivation.Onset1';
         interval=0;
     else
-        onset=AutoDataProcessParameter.taskactivation.Onset';
-        interval=AutoDataProcessParameter.taskactivation.Duration-1;
+        onset=AutoDataProcessParameter.taskactivation.Onset1';
+        interval=AutoDataProcessParameter.taskactivation.Duration1-1;
     end
     
     for i=1:length(onset)
@@ -2310,7 +2289,7 @@ if (AutoDataProcessParameter.IsCaltaskactivation==1)&&(AutoDataProcessParameter.
         
         % Extract time course
         for ss=3:length(sublist)
-            % TumorTCdir=dir([ICADir,filesep,sublist(ss).name,filesep,'output',filesep,'gc_sub001_timecourses_ica_s1_.hdr']);
+            % PreSurgMappTCdir=dir([ICADir,filesep,sublist(ss).name,filesep,'output',filesep,'gc_sub001_timecourses_ica_s1_.hdr']);
             [TC_allIC, TCHead] = rest_ReadNiftiImage([ICADir,filesep,sublist(ss).name,filesep,'output',filesep,'gc_sub001_timecourses_ica_s1_.hdr']);
             AllSubjects_TC{ss-2,1}=TC_allIC;
             for i=1:size(TC_allIC,2);
@@ -2349,7 +2328,7 @@ if (AutoDataProcessParameter.IsCaltaskactivation==1)&&(AutoDataProcessParameter.
         
         % Extract time course
         for ss=3:length(sublist)
-            % TumorTCdir=dir([ICADir,filesep,sublist(ss).name,filesep,'output',filesep,'gc_sub001_timecourses_ica_s1_.hdr']);
+            % PreSurgMappTCdir=dir([ICADir,filesep,sublist(ss).name,filesep,'output',filesep,'gc_sub001_timecourses_ica_s1_.hdr']);
             [TC_allIC, TCHead] = rest_ReadNiftiImage([ICADir,filesep,sublist(ss).name,filesep,'output',filesep,'gc_sub001_timecourses_ica_s1_.hdr']);
             AllSubjects_TC{ss-2,1}=TC_allIC;
             for i=1:size(TC_allIC,2);
@@ -2382,7 +2361,7 @@ if (AutoDataProcessParameter.IsCaltaskactivation==1)&&(AutoDataProcessParameter.
         
         % Extract time course
         for ss=3:length(sublist)
-            % TumorTCdir=dir([ICADir,filesep,sublist(ss).name,filesep,'output',filesep,'gc_sub001_timecourses_ica_s1_.hdr']);
+            % PreSurgMappTCdir=dir([ICADir,filesep,sublist(ss).name,filesep,'output',filesep,'gc_sub001_timecourses_ica_s1_.hdr']);
             [TC_allIC, TCHead] = rest_ReadNiftiImage([ICADir,filesep,sublist(ss).name,filesep,'output',filesep,'gc_sub001_timecourses_ica_s1_.hdr']);
             AllSubjects_TC{ss-2,1}=TC_allIC;
             for i=1:size(TC_allIC,2);
@@ -2410,7 +2389,7 @@ end
 
 %%%% Segmentation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if (AutoDataProcessParameter.IsSegment>=1)
-    [ProgramPath, fileN, extn] = fileparts(which('TumorProcessing_main.m'));
+    [ProgramPath, fileN, extn] = fileparts(which('PreSurgMappProcessing_main.m'));
     if AutoDataProcessParameter.IsSegment==1
         T1ImgSegmentDirectoryName = 'T1ImgSegment';
     elseif AutoDataProcessParameter.IsSegment==2
@@ -2418,7 +2397,7 @@ if (AutoDataProcessParameter.IsSegment>=1)
     end
     if 7==exist([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{1}],'dir')
         DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{1},filesep,'*.img']);
-        if isempty(DirT1ImgCoreg)  %YAN Chao-Gan, 111114. Also support .nii files.
+        if isempty(DirT1ImgCoreg)  % Also support .nii files.
             DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{1},filesep,'*.nii.gz']);
             if length(DirT1ImgCoreg)==1
                 gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirImg(1).name]);
@@ -2432,21 +2411,21 @@ if (AutoDataProcessParameter.IsSegment>=1)
     if isempty(DirT1ImgCoreg)
         
         %Backup the T1 images to T1ImgSegment or T1ImgNewSegment
-        % Check if co* image exist. Added by YAN Chao-Gan 100510.
+        % Check if co* image exist.
         cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{1}]);
         DirCo=dir('c*.img');
         if isempty(DirCo)
-            DirCo=dir('c*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+            DirCo=dir('c*.nii.gz');  % Search .nii.gz and unzip;
             if length(DirCo)==1
                 gunzip(DirCo(1).name);
                 delete(DirCo(1).name);
             end
-            DirCo=dir('c*.nii');  %YAN Chao-Gan, 111114. Also support .nii files.
+            DirCo=dir('c*.nii');  % Also support .nii files.
         end
         if isempty(DirCo)
             DirImg=dir('*.img');
-            if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files.
-                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+            if isempty(DirImg)  % Also support .nii files.
+                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip;
                 if length(DirImg)>=1
                     for j=1:length(DirImg)
                         gunzip(DirImg(j).name);
@@ -2476,14 +2455,14 @@ if (AutoDataProcessParameter.IsSegment>=1)
         parfor i=1:AutoDataProcessParameter.SubjectNum
             cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i}]);
             mkdir([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i}])
-            % Check in co* image exist. Added by YAN Chao-Gan 100510.
+            % Check in co* image exist.
             if UseNoCoT1Image==0
                 DirImg=dir('c*.img');
-                if ~isempty(DirImg)  %YAN Chao-Gan, 111114
+                if ~isempty(DirImg)
                     copyfile('c*.hdr',[AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i}])
                     copyfile('c*.img',[AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i}])
                 else
-                    DirImg=dir('c*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                    DirImg=dir('c*.nii.gz');  % Search .nii.gz and unzip;
                     if length(DirImg)==1
                         gunzip(DirImg(1).name);
                         delete(DirImg(1).name);
@@ -2492,11 +2471,11 @@ if (AutoDataProcessParameter.IsSegment>=1)
                 end
             else
                 DirImg=dir('*.img');
-                if ~isempty(DirImg)  %YAN Chao-Gan, 111114
+                if ~isempty(DirImg)
                     copyfile('*.hdr',[AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i}])
                     copyfile('*.img',[AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i}])
                 else
-                    DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                    DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip;
                     if length(DirImg)>=1
                         for j=1:length(DirImg)
                             gunzip(DirImg(j).name);
@@ -2517,11 +2496,11 @@ if (AutoDataProcessParameter.IsSegment>=1)
             cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i}]);
             mkdir([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i}])
             DirImg=dir('*.img');
-            if ~isempty(DirImg)  %YAN Chao-Gan, 111114
+            if ~isempty(DirImg)
                 copyfile('*.hdr',[AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i}])
                 copyfile('*.img',[AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i}])
             else
-                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip;
                 if length(DirImg)>=1
                     for j=1:length(DirImg)
                         gunzip(DirImg(j).name);
@@ -2541,25 +2520,25 @@ if (AutoDataProcessParameter.IsSegment>=1)
         parfor i=1:AutoDataProcessParameter.SubjectNum
             SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Segment.mat']);
             SourceDir=dir([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
-            if isempty(SourceDir)  %YAN Chao-Gan, 111114. Also support .nii files.
+            if isempty(SourceDir)  % Also support .nii files.
                 SourceDir=dir([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
             end
             SourceFile=[AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,SourceDir(1).name];
             [SPMPath, fileN, extn] = fileparts(which('spm.m'));
             SPMJOB.jobs{1,1}.spatial{1,1}.preproc.opts.tpm={[SPMPath,filesep,'tpm',filesep,'grey.nii'];[SPMPath,filesep,'tpm',filesep,'white.nii'];[SPMPath,filesep,'tpm',filesep,'csf.nii']};
             SPMJOB.jobs{1,1}.spatial{1,1}.preproc.data={SourceFile};
-            if strcmpi(AutoDataProcessParameter.Segment.AffineRegularisationInSegmentation,'mni')   %Added by YAN Chao-Gan 091110. Use different Affine Regularisation in Segmentation: East Asian brains (eastern) or European brains (mni).
+            if strcmpi(AutoDataProcessParameter.Segment.AffineRegularisationInSegmentation,'mni')   % Use different Affine Regularisation in Segmentation: East Asian brains (eastern) or European brains (mni).
                 SPMJOB.jobs{1,1}.spatial{1,1}.preproc.opts.regtype='mni';
             else
                 SPMJOB.jobs{1,1}.spatial{1,1}.preproc.opts.regtype='eastern';
             end
-            T1SourceFileSet{i} = SourceFile;%YAN Chao-Gan 121218.
+            T1SourceFileSet{i} = SourceFile;
             fprintf(['Segment Setup:',AutoDataProcessParameter.SubjectID{i},' OK']);
             
             fprintf('\n');
             if SPMversion==5
                 spm_jobman('run',SPMJOB.jobs);
-            elseif SPMversion==8  %YAN Chao-Gan, 090925. SPM8 compatible.
+            elseif SPMversion==8  % SPM8 compatible.
                 SPMJOB.jobs = spm_jobman('spm5tospm8',{SPMJOB.jobs});
                 spm_jobman('run',SPMJOB.jobs{1});
             else
@@ -2569,7 +2548,7 @@ if (AutoDataProcessParameter.IsSegment>=1)
             
         end
         
-    elseif AutoDataProcessParameter.IsSegment==2  %New Segment in SPM8 %YAN Chao-Gan, 111111.
+    elseif AutoDataProcessParameter.IsSegment==2  %New Segment in SPM8
         
         T1SourceFileSet = cell(AutoDataProcessParameter.SubjectNum,1); % Save to use in the step of DARTEL normalize to MNI
         cd([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName]);
@@ -2581,14 +2560,14 @@ if (AutoDataProcessParameter.IsSegment>=1)
                 SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.tissue(1,T1ImgSegmentDirectoryNameue).tpm{1,1}=[SPMPath,filesep,'toolbox',filesep,'Seg',filesep,'TPM.nii',',',num2str(T1ImgSegmentDirectoryNameue)];
                 SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.tissue(1,T1ImgSegmentDirectoryNameue).warped = [0 0]; % Do not need warped results. Warp by DARTEL
             end
-            if strcmpi(AutoDataProcessParameter.Segment.AffineRegularisationInSegmentation,'mni')   %Added by YAN Chao-Gan 091110. Use different Affine Regularisation in Segmentation: East Asian brains (eastern) or European brains (mni).
+            if strcmpi(AutoDataProcessParameter.Segment.AffineRegularisationInSegmentation,'mni')   % Use different Affine Regularisation in Segmentation: East Asian brains (eastern) or European brains (mni).
                 SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.warp.affreg='mni';
             else
                 SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.warp.affreg='eastern';
             end
             
             SourceDir=dir([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
-            if isempty(SourceDir)  %YAN Chao-Gan, 111114. Also support .nii files.
+            if isempty(SourceDir)  % Also support .nii files.
                 SourceDir=dir([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
             end
             SourceFile=[AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,SourceDir(1).name];
@@ -2610,7 +2589,7 @@ homeHM = ([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter']);
 homeSegment = ([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgSegment']);
 mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'individual_RSN_template']);
 homeDat = ([AutoDataProcessParameter.DataProcessDir,filesep,'individual_RSN_template']);
-[ProgramPath, fileN, extn] = fileparts(which('TumorProcessing_main.m'));
+[ProgramPath, fileN, extn] = fileparts(which('PreSurgMappProcessing_main.m'));
 
 for i =1:AutoDataProcessParameter.SubjectNum
     
@@ -2752,11 +2731,9 @@ if (AutoDataProcessParameter.IsCalICA==1)&&(AutoDataProcessParameter.IsCalDICIIC
     end
     for i =1:AutoDataProcessParameter.SubjectNum
         load ([ICADir,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'individualICA_rest_20',filesep,'gc_mask.mat']);
-        a = zeros(64,64,AutoDataProcessParameter.SliceTiming.SliceNumber); %改
+        a = zeros(64,64,AutoDataProcessParameter.SliceTiming.SliceNumber);
         a(mask_ind)=1;
-        % [data head]= rest_ReadNiftiImage('D:\dataProcessing\ZhenZhouUnivNo1Hosp\analysis\intra-ICA-80\output\gc_sub001_component_ica_s1_002.hdr');
         [data head]= rest_ReadNiftiImage([ICADir,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'individualICA_rest_20',filesep,'output',filesep,'gc_sub001_component_ica_s1_002.hdr']);
-        % rest_WriteNiftiImage(a,head,'D:\dataProcessing\ZhenZhouUnivNo1Hosp\analysis\intra-ICA-80\output\mask.img');
         
         
         rest_WriteNiftiImage(a,head,[AutoDataProcessParameter.DataProcessDir,filesep,'individual_brainmask',filesep,AutoDataProcessParameter.SubjectID{i},'_mask.img']);
@@ -2784,13 +2761,11 @@ if (AutoDataProcessParameter.IsCalICA==1)&&(AutoDataProcessParameter.IsCalDICIIC
         DICIresultDir=([DICIresultDir ,'\',AutoDataProcessParameter.SubjectID{i},'_DICI_SMN']);
         
         
-        % read binary task activation gen by rest (p<1e-10, FWE, single tailed, t > 10.75; extent: clust size > 20)
+        
         % note: this binary mask is already intersected with MICA_brain_mask
-        %[dataTumor headTumor] = rest_ReadNiftiImage([homeDir,'/wm_task_activation/','binary_in_mask.hdr']);
-        [dataSMN headSMN] = rest_ReadNiftiImage(SMNDir); %  individual Tumor directory
+        [dataSMN headSMN] = rest_ReadNiftiImage(SMNDir); %  individual PreSurgMapp directory
         
         % read brain mask file in MICA (MICA_brain_mask)
-        %[dataMask headMask] = rest_ReadNiftiImage([homeDir,'/wm_task_activation/','brainmask_n.hdr']);
         [dataMask headMask] = rest_ReadNiftiImage(maskDir);  % individual brainmask
         
         for tt =1:length(tcn)
@@ -2799,7 +2774,6 @@ if (AutoDataProcessParameter.IsCalICA==1)&&(AutoDataProcessParameter.IsCalDICIIC
             
             cd([homeDir,'\','output']);
             mkdir('temp');
-            % unzip('gc_tmap__component_ICA_.zip','temp/');
             unzip('gc_sub001_component_ICA_s1_.zip','temp\');
             cd('temp');
             a = dir('gc_sub001_component_ICA_s1_*.hdr');
@@ -2808,14 +2782,14 @@ if (AutoDataProcessParameter.IsCalICA==1)&&(AutoDataProcessParameter.IsCalDICIIC
                 [data head] = rest_ReadNiftiImage(a(aa,1).name);
                 % only see positive IC value, put negative to 0. binary the ICA map
                 temp = zeros(64,64,AutoDataProcessParameter.SliceTiming.SliceNumber); % different centre has different z!
-                temp(find((data)>1.2)) = 1;  % 问老师阈值设多少？
+                temp(find((data)>1.2)) = 1;
                 
                 % next will do cluster size thresholding
                 [L Num] = bwlabeln(temp,18);
                 for nn = 1:Num
                     clusterSizeAll(nn,1) = length(find(L==nn));
                 end
-                smallClusterID = find(clusterSizeAll<20); % cluster threshold set to be 20 要不要改？
+                smallClusterID = find(clusterSizeAll<20); % cluster threshold set to be 20
                 for bb = 1:length(smallClusterID)
                     temp(find(L==smallClusterID(bb)))=0;
                 end
@@ -2826,7 +2800,7 @@ if (AutoDataProcessParameter.IsCalICA==1)&&(AutoDataProcessParameter.IsCalDICIIC
                 temp1 = length(find(data.*dataSMN))/length(find(dataSMN));
                 
                 % 2. faulse alarm rate
-                temp = zeros(64,64,AutoDataProcessParameter.SliceTiming.SliceNumber); % 改
+                temp = zeros(64,64,AutoDataProcessParameter.SliceTiming.SliceNumber);
                 temp(find(dataSMN==0)) = 1;
                 temp(find(dataMask==0)) = 0;
                 temp2 = length(find(data.*temp))/length(find(temp));
@@ -2869,8 +2843,6 @@ if (AutoDataProcessParameter.IsCalICA==1)&&(AutoDataProcessParameter.IsCalDICIIC
         
     end
     
-    %     cd([AutoDataProcessParameter.DataProcessDir,filesep,'DICIresult']);
-    %     save  DICI_allsubject_SMN  DICI_allsubject_SMN
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Calculating DICI for language network
@@ -2888,16 +2860,13 @@ if (AutoDataProcessParameter.IsCalICA==1)&&(AutoDataProcessParameter.IsCalDICIIC
         DICIresultDir= ([AutoDataProcessParameter.DataProcessDir,filesep,'DICIresult']);
         ICADir=([ICADir,'\',AutoDataProcessParameter.SubjectID{i}]);
         maskDir =([maskDir ,'\',AutoDataProcessParameter.SubjectID{i},'_mask.hdr']);
-        LNDir=([LNDir ,'\',AutoDataProcessParameter.SubjectID{i},'\','wPositiveBinaryMask_template_languageFDR001.hdr']); % 改
+        LNDir=([LNDir ,'\',AutoDataProcessParameter.SubjectID{i},'\','wPositiveBinaryMask_template_languageFDR001.hdr']);
         DICIresultDir=([DICIresultDir ,'\',AutoDataProcessParameter.SubjectID{i},'_DICI_Language']);
         
-        % read binary task activation gen by rest (p<1e-10, FWE, single tailed, t > 10.75; extent: clust size > 20)
         % note: this binary mask is already intersected with MICA_brain_mask
-        %[dataTumor headTumor] = rest_ReadNiftiImage([homeDir,'/wm_task_activation/','binary_in_mask.hdr']);
-        [dataLN headLN] = rest_ReadNiftiImage(LNDir); %  individual Tumor directory
+        [dataLN headLN] = rest_ReadNiftiImage(LNDir); %  individual PreSurgMapp directory
         
         % read brain mask file in MICA (MICA_brain_mask)
-        %[dataMask headMask] = rest_ReadNiftiImage([homeDir,'/wm_task_activation/','brainmask_n.hdr']);
         [dataMask headMask] = rest_ReadNiftiImage(maskDir);  % individual brainmask
         
         for tt =1:length(tcn)
@@ -2905,7 +2874,6 @@ if (AutoDataProcessParameter.IsCalICA==1)&&(AutoDataProcessParameter.IsCalDICIIC
             
             cd([homeDir,'\','output']);
             mkdir('temp');
-            % unzip('gc_tmap__component_ICA_.zip','temp/');
             unzip('gc_sub001_component_ICA_s1_.zip','temp\');
             cd('temp');
             a = dir('gc_sub001_component_ICA_s1_*.hdr');
@@ -2914,14 +2882,14 @@ if (AutoDataProcessParameter.IsCalICA==1)&&(AutoDataProcessParameter.IsCalDICIIC
                 [data head] = rest_ReadNiftiImage(a(aa,1).name);
                 % only see positive IC value, put negative to 0. binary the ICA map
                 temp = zeros(64,64,AutoDataProcessParameter.SliceTiming.SliceNumber); % different centre has different z!
-                temp(find((data)>1.2)) = 1;  % 问老师阈值设多少？
+                temp(find((data)>1.2)) = 1;
                 
                 % next will do cluster size thresholding
                 [L Num] = bwlabeln(temp,18);
                 for nn = 1:Num
                     clusterSizeAll(nn,1) = length(find(L==nn));
                 end
-                smallClusterID = find(clusterSizeAll<20); % cluster threshold set to be 20 要不要改？
+                smallClusterID = find(clusterSizeAll<20); % cluster threshold set to be 20
                 for bb = 1:length(smallClusterID)
                     temp(find(L==smallClusterID(bb)))=0;
                 end
@@ -2932,7 +2900,7 @@ if (AutoDataProcessParameter.IsCalICA==1)&&(AutoDataProcessParameter.IsCalDICIIC
                 temp1 = length(find(data.*dataLN))/length(find(dataLN));
                 
                 % 2. faulse alarm rate
-                temp = zeros(64,64,AutoDataProcessParameter.SliceTiming.SliceNumber); % 改
+                temp = zeros(64,64,AutoDataProcessParameter.SliceTiming.SliceNumber);
                 temp(find(dataLN==0)) = 1;
                 temp(find(dataMask==0)) = 0;
                 temp2 = length(find(data.*temp))/length(find(temp));
@@ -2965,7 +2933,7 @@ if (AutoDataProcessParameter.IsCalICA==1)&&(AutoDataProcessParameter.IsCalDICIIC
             cd ..
         end
         finalResult_LN=[tcn' indAll(:,1) valAll(:,1) indAll(:,2) valAll(:,2)];
-        %         DICI_allsubject_Language{i,1}=finalResult_LN; %改
+        %         DICI_allsubject_Language{i,1}=finalResult_LN;
         temp=finalResult_LN(:,3);
         [value index]=sort(temp,'descend');
         
@@ -2974,28 +2942,26 @@ if (AutoDataProcessParameter.IsCalICA==1)&&(AutoDataProcessParameter.IsCalDICIIC
         save([DICIresultDir], 'diciAll','finalResult_LN', 'dataMask', 'dataLN','ThebiggestDICI_LN')
     end
     
-    %     cd([AutoDataProcessParameter.DataProcessDir,filesep,'DICIresult']);
-    %     save  DICI_allsubject_Language  DICI_allsubject_Language
     
 end
 %%%%%%%%%%%%%%%% Task activation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
 clear matlabbatch jobfile jobs
-if (AutoDataProcessParameter.IsCaltaskactivation==1)
+if (AutoDataProcessParameter.IsCaltaskactivation==1)&&(AutoDataProcessParameter.taskcondition==1)
     
     spm('defaults','fmri');
     spm_jobman('initcfg');
     
     % set home dir
     mkdir([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.taskname,'_activation']);
-    homeStat =([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.taskname,'_activation']); %改：输出路径
-    homeHM = ([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter']); %改：头动参数所在文件夹
+    homeStat =([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.taskname,'_activation']);
+    homeHM = ([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter']);
     
     %     if AutoDataProcessParameter.FunctionalSessionNumber==1
     %         homeDat =([AutoDataProcessParameter.DataProcessDir,filesep,'NiftiPairs']);
     %     else
-    if ~isempty(strfind(AutoDataProcessParameter.StartingDirName,'NiftiPairs'))                    % revised by HHY 20130603
-        homeDat =([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName]); %改：平滑后数据所在文件夹
+    if ~isempty(strfind(AutoDataProcessParameter.StartingDirName,'NiftiPairs'))                    % revised by HHY 20150603
+        homeDat =([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName]);
     elseif AutoDataProcessParameter.FunctionalSessionNumber==1
         homeDat=([AutoDataProcessParameter.DataProcessDir,filesep,'NiftiPairs']);
     elseif AutoDataProcessParameter.FunctionalSessionNumber>1
@@ -3026,9 +2992,9 @@ if (AutoDataProcessParameter.IsCaltaskactivation==1)
             matlabbatch{1}.spm.stats.fmri_spec.sess.scans{tp,1} = [homeDat,'/',subName(subID,1).name,'/',data(tp,1).name,',1'];
         end
         
-        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).name = AutoDataProcessParameter.taskname; %改： 结果名字
-        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).onset = AutoDataProcessParameter.taskactivation.Onset; %% load onset
-        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).duration = AutoDataProcessParameter.taskactivation.Duration;        %改： duration
+        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).name = AutoDataProcessParameter.taskname;
+        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).onset = AutoDataProcessParameter.taskactivation.Onset1; %% load onset
+        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).duration = AutoDataProcessParameter.taskactivation.Duration1;        % duration
         matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).tmod = 0;
         matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).pmod = struct('name', {}, 'param', {}, 'poly', {});
         
@@ -3037,7 +3003,7 @@ if (AutoDataProcessParameter.IsCaltaskactivation==1)
         
         %% generate rp file's full path --> HMdata
         HMsubName(subID,1).name=subName(subID,1).name(1:end-14);
-        temp = dir([homeHM,'/',HMsubName(subID,1).name,'/',FunSessionPrefixSet{iFunSession},'rp_*.txt']);  %改： 头动参数
+        temp = dir([homeHM,'/',HMsubName(subID,1).name,'/',FunSessionPrefixSet{iFunSession},'rp_*.txt']);
         HMdata = [homeHM,'/',HMsubName(subID,1).name,'/',temp(1,1).name];
         matlabbatch{1}.spm.stats.fmri_spec.sess.multi_reg{1,1} = HMdata;
         matlabbatch{1}.spm.stats.fmri_spec.sess.hpf = Inf;
@@ -3099,6 +3065,113 @@ end
 
 
 
+%% add two taskconditon on 2016.0915
+if (AutoDataProcessParameter.IsCaltaskactivation==1)&&(AutoDataProcessParameter.taskcondition==2)
+    
+    spm('defaults','fmri');
+    spm_jobman('initcfg');
+    
+    % set home dir
+    mkdir([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.taskname,'_activation']);
+    homeStat =([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.taskname,'_activation']);
+    homeHM = ([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter']);
+    
+    if ~isempty(strfind(AutoDataProcessParameter.StartingDirName,'NiftiPairs'))                    % revised by HHY 20150603
+        homeDat =([AutoDataProcessParameter.DataProcessDir,filesep,AutoDataProcessParameter.StartingDirName]);
+    elseif AutoDataProcessParameter.FunctionalSessionNumber==1
+        homeDat=([AutoDataProcessParameter.DataProcessDir,filesep,'NiftiPairs']);
+    elseif AutoDataProcessParameter.FunctionalSessionNumber>1
+        homeDat=([AutoDataProcessParameter.DataProcessDir,filesep,'S2_NiftiPairs']);
+    end
+    
+    % get subName
+    subNametemp = dir([homeDat,filesep,'*']);
+    subName= subNametemp(3:end);
+    
+    %% loop for subject
+    for subID = 1:length(subName)
+        %-----------------------------------------------------------------------
+        % Job configuration created by cfg_util (rev $Rev: 4252 $)
+        %-----------------------------------------------------------------------
+%         batchID1 = 1+(subID-1)*3;  %% this is the 1st batch -- model specify
+        mkdir([homeStat,'/',subName(subID,1).name,'/']);
+        matlabbatch{1}.spm.stats.fmri_spec.dir{1,1} = [homeStat,'/',subName(subID,1).name,'/'];
+        matlabbatch{1}.spm.stats.fmri_spec.timing.units = 'scans';
+        matlabbatch{1}.spm.stats.fmri_spec.timing.RT = 2;
+        matlabbatch{1}.spm.stats.fmri_spec.timing.fmri_t = 16;
+        matlabbatch{1}.spm.stats.fmri_spec.timing.fmri_t0 = 1;
+        matlabbatch{1}.spm.stats.fmri_spec.sess.scans = cell(AutoDataProcessParameter.TimePoints,1);  %% i.e.data have 236 time points!
+        
+        
+        %% 2nd loop for data points
+        for tp = 1:AutoDataProcessParameter.TimePoints
+            data = dir([homeDat,'/',subName(subID,1).name,'/*img']);
+            matlabbatch{1}.spm.stats.fmri_spec.sess.scans{tp,1} = [homeDat,'/',subName(subID,1).name,'/',data(tp,1).name,',1'];
+        end
+        
+        % condition 1
+        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).name = 'cond1';
+        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).onset = AutoDataProcessParameter.taskactivation.Onset1;  %% load cond1 onset
+        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).duration = AutoDataProcessParameter.taskactivation.Duration1;
+        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).tmod = 0;
+        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).pmod = struct('name', {}, 'param', {}, 'poly', {});
+        
+        % condition 2
+        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(2).name = 'cond2';
+        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(2).onset = AutoDataProcessParameter.taskactivation.Onset2;  %% load cond2 onset
+        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(2).duration =AutoDataProcessParameter.taskactivation.Duration2;
+        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(2).tmod = 0;
+        matlabbatch{1}.spm.stats.fmri_spec.sess.cond(2).pmod = struct('name', {}, 'param', {}, 'poly', {});
+        matlabbatch{1}.spm.stats.fmri_spec.sess.multi = {''};
+        matlabbatch{1}.spm.stats.fmri_spec.sess.regress = struct('name', {}, 'val', {});
+        
+        %% generate rp file's full path --> HMdata
+        HMsubName(subID,1).name=subName(subID,1).name(1:end-14);
+        temp = dir([homeHM,'/',HMsubName(subID,1).name,'/',FunSessionPrefixSet{iFunSession},'rp_*.txt']);  
+        HMdata = [homeHM,'/',HMsubName(subID,1).name,'/',temp(1,1).name];
+        matlabbatch{1}.spm.stats.fmri_spec.sess.multi_reg{1,1} = HMdata;
+        matlabbatch{1}.spm.stats.fmri_spec.sess.hpf = Inf;
+        matlabbatch{1}.spm.stats.fmri_spec.fact = struct('name', {}, 'levels', {});
+        matlabbatch{1}.spm.stats.fmri_spec.bases.hrf.derivs = [0 0];
+        matlabbatch{1}.spm.stats.fmri_spec.volt = 1;
+        matlabbatch{1}.spm.stats.fmri_spec.global = 'None';
+        matlabbatch{1}.spm.stats.fmri_spec.mask = {''};
+        matlabbatch{1}.spm.stats.fmri_spec.cvi = 'AR(1)';
+        
+        
+%         batchID2 = 2 + (subID-1)*3;  %% this is the 2nd batch -- model estimation
+        matlabbatch{2}.spm.stats.fmri_est.spmmat{1,1} = [homeStat,'/',subName(subID,1).name,'/SPM.mat'];
+        matlabbatch{2}.spm.stats.fmri_est.method.Classical = 1;
+        
+        
+%         batchID3 = 3 + (subID-1)*3;  %% this is the 3rd batch -- contrast
+        matlabbatch{3}.spm.stats.con.spmmat{1,1} = [homeStat,'/',subName(subID,1).name,'/SPM.mat'];
+        matlabbatch{3}.spm.stats.con.consess{1}.tcon.name = 'cond1';
+        matlabbatch{3}.spm.stats.con.consess{1}.tcon.convec = [1 0];
+        matlabbatch{3}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+        matlabbatch{3}.spm.stats.con.consess{2}.tcon.name = 'cond2';
+        matlabbatch{3}.spm.stats.con.consess{2}.tcon.convec = [0 1];
+        matlabbatch{3}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
+        matlabbatch{3}.spm.stats.con.delete = 0;
+        
+       %% clear temperary variables
+        clear temp HMdata data
+        cd([homeStat,'/',subName(subID,1).name,'/']);
+        save batch_job
+        
+        % List of open inputs
+        nrun = 1; % enter the number of runs here
+        jobfile = {[homeStat,'/',subName(subID,1).name,'/','batch_job.mat']};
+        jobs = repmat(jobfile, 1, nrun);
+        inputs = cell(0, nrun);
+        for crun = 1:nrun
+        end
+        spm('defaults', 'FMRI');
+        spm_jobman('serial', jobs, '', inputs{:});
+        
+    end    
+end
+
 
 if ~isempty(Error)
     disp(Error);
@@ -3106,4 +3179,4 @@ if ~isempty(Error)
 end
 
 
-rest_waitbar;  %Added by YAN Chao-Gan 091110. Close the rest waitbar after all the calculation.
+rest_waitbar;  % Close the rest waitbar after all the calculation.
